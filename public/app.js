@@ -8,6 +8,7 @@ const state = {
   phase: "loading",
   combatLogs: [],
   combatDone: false,
+  combatMatchup: null,
   battleSpeed: 1,
   toast: ""
 };
@@ -220,6 +221,11 @@ async function startCombat() {
 
   try {
     const game = await api(`/game/${state.sessionId}/start_combat`, { method: "POST" });
+    state.combatMatchup = {
+      player: state.game,
+      enemy: game.last_enemy_artist
+    };
+    render();
     await playCombatLogs(game.last_battle_log ?? []);
     state.combatDone = true;
     render();
@@ -229,6 +235,7 @@ async function startCombat() {
     state.phase = "shop";
     state.combatLogs = [];
     state.combatDone = false;
+    state.combatMatchup = null;
     showToast(error.message);
   }
 }
@@ -260,6 +267,7 @@ async function restartGame() {
   state.phase = "loading";
   state.combatLogs = [];
   state.combatDone = false;
+  state.combatMatchup = null;
   await boot();
 }
 
@@ -276,6 +284,7 @@ function updateGame(game) {
   state.phase = normalizePhase(game.phase);
   state.combatLogs = [];
   state.combatDone = false;
+  state.combatMatchup = null;
   render();
 }
 
@@ -520,6 +529,7 @@ function renderCombatOverlay() {
           <p class="muted">
             ${state.combatDone ? "결과를 정산하는 중입니다." : "상대 아티스트의 곡과 턴마다 공격을 주고받습니다."}
           </p>
+          ${renderCombatMatchup()}
           ${renderBattleSpeedControl("combatSpeed")}
           <div class="combat-pulse" aria-hidden="true">
             <span></span>
@@ -536,6 +546,43 @@ function renderCombatOverlay() {
   `;
 
   bindBattleSpeedControl("#combatSpeed");
+}
+
+function renderCombatMatchup() {
+  const matchup = state.combatMatchup;
+
+  if (!matchup?.player || !matchup?.enemy) {
+    return `
+      <div class="battle-matchup loading">
+        <div class="matchup-card"><span class="matchup-placeholder">Player</span></div>
+        <strong class="versus">VS</strong>
+        <div class="matchup-card"><span class="matchup-placeholder">Enemy</span></div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="battle-matchup">
+      ${renderMatchupArtist(matchup.player, "PLAYER")}
+      <strong class="versus">VS</strong>
+      ${renderMatchupArtist(matchup.enemy, "RIVAL")}
+    </div>
+  `;
+}
+
+function renderMatchupArtist(artist, label) {
+  const name = displayArtistName(artist);
+
+  return `
+    <article class="matchup-card">
+      ${imageTag(artistImage(artist), `${name} profile image`, "matchup-image")}
+      <div>
+        <span class="matchup-label">${label}</span>
+        <h3>${escapeHtml(name)}</h3>
+        <p>${escapeHtml(artist.genre ?? artist.artist_name ?? "")}</p>
+      </div>
+    </article>
+  `;
 }
 
 function renderResolution() {

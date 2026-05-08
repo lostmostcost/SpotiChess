@@ -140,6 +140,8 @@ def spawn_enemies(player_artist_id: str, round_no: int) -> list[dict]:
             "artist_id": enemy_artist["artist_id"],
             "artist_name": enemy_artist["artist_name"],
             "artist_name_kr": enemy_artist.get("artist_name_kr"),
+            "profile_image": public_asset_url(enemy_artist.get("profile_image")),
+            "genre": enemy_artist.get("genre"),
             "track_name": track_data["track_name"],
             "track_name_kr": track_data.get("track_name_kr"),
             "cover_image": public_asset_url(track_data.get("cover_image")),
@@ -273,6 +275,7 @@ def new_game():
         "board": [],
         "last_battle_log": None,
         "last_result": None,
+        "last_enemy_artist": None,
         "_candidate_ids": [a["artist_id"] for a in candidates],
     }
     return {
@@ -394,6 +397,13 @@ def start_combat(sid: str):
     state["phase"] = "result"
     state["last_battle_log"] = log
     state["last_result"] = "win" if win else "loss"
+    state["last_enemy_artist"] = {
+        "artist_id": enemies[0]["artist_id"],
+        "artist_name": enemies[0]["artist_name"],
+        "artist_name_kr": enemies[0].get("artist_name_kr"),
+        "profile_image": enemies[0].get("profile_image"),
+        "genre": enemies[0].get("genre"),
+    }
 
     if win:
         state["gold"] += WIN_BONUS_GOLD
@@ -424,6 +434,7 @@ def next_round(sid: str):
     state["phase"] = "shop"
     state["last_battle_log"] = None
     state["last_result"] = None
+    state["last_enemy_artist"] = None
     return public_state(state)
 
 
