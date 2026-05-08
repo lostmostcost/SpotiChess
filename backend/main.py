@@ -10,6 +10,8 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # ==================== 상수 ====================
@@ -40,6 +42,7 @@ MAX_BATTLE_TURNS = 30
 
 # ==================== 데이터 로드 ====================
 DATA_PATH = Path(__file__).parent / "data.json"
+PUBLIC_PATH = Path(__file__).parent.parent / "public"
 with open(DATA_PATH, encoding="utf-8") as f:
     GAME_DATA = json.load(f)
 
@@ -57,6 +60,8 @@ def make_track(track_data: dict, artist_id: str, idx: int) -> dict:
     return {
         "track_id": f"{artist_id}_{idx}_{uuid.uuid4().hex[:4]}",
         "track_name": track_data["track_name"],
+        "track_name_kr": track_data.get("track_name_kr"),
+        "cover_image": track_data.get("cover_image"),
         "popularity": track_data["popularity"],
         "atk": calc_atk(track_data["popularity"]),
     }
@@ -67,6 +72,8 @@ def make_unit_from_track(track: dict) -> dict:
     return {
         "unit_id": uuid.uuid4().hex[:8],
         "track_name": track["track_name"],
+        "track_name_kr": track.get("track_name_kr"),
+        "cover_image": track.get("cover_image"),
         "popularity": track["popularity"],
         "hp": BASE_HP,
         "max_hp": BASE_HP,
@@ -222,6 +229,9 @@ def new_game():
         "exp": 0,
         "artist_id": None,
         "artist_name": None,
+        "artist_name_kr": None,
+        "profile_image": None,
+        "genre": None,
         "shop": [],
         "board": [],
         "last_battle_log": None,
@@ -234,6 +244,9 @@ def new_game():
             {
                 "artist_id": a["artist_id"],
                 "artist_name": a["artist_name"],
+                "artist_name_kr": a.get("artist_name_kr"),
+                "profile_image": a.get("profile_image"),
+                "genre": a.get("genre"),
                 "sample_popularity": [t["popularity"] for t in a["tracks"][:5]],
                 "avg_popularity": round(
                     sum(t["popularity"] for t in a["tracks"]) / len(a["tracks"]), 1
@@ -255,6 +268,9 @@ def select_persona(sid: str, req: PersonaSelect):
     artist = ARTISTS_BY_ID[req.artist_id]
     state["artist_id"] = req.artist_id
     state["artist_name"] = artist["artist_name"]
+    state["artist_name_kr"] = artist.get("artist_name_kr")
+    state["profile_image"] = artist.get("profile_image")
+    state["genre"] = artist.get("genre")
     state["round"] = 1
     state["phase"] = "shop"
     refresh_shop(state)
@@ -379,8 +395,8 @@ def get_state(sid: str):
     return public_state(get_session(sid))
 
 
-@app.get("/")
-def root():
+@app.get("/api")
+def api_root():
     return {
         "service": "Spotify Chess API",
         "concept": "유명할수록 약하고, 무명일수록 강하다.",
@@ -396,3 +412,11 @@ def root():
             "GET  /game/{sid}",
         ],
     }
+
+
+@app.get("/")
+def frontend_root():
+    return FileResponse(PUBLIC_PATH / "index.html")
+
+
+app.mount("/", StaticFiles(directory=PUBLIC_PATH, html=True), name="frontend")
