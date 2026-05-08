@@ -3,195 +3,602 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Spotify Chess — 무명이 강해지는 오토배틀러</title>
+    <title>Spotify Chess — 카드로 듣는 민주주의</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+KR:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              spotify: {
-                bg: "#121212",
-                card: "#181818",
-                cardHover: "#222",
-                border: "#2a2a2a",
-                text: "#e5e5e5",
-                muted: "#9a9a9a",
-                green: "#1DB954",
-                greenSoft: "rgba(29,185,84,0.15)",
-                pink: "#ff4d8d",
-                amber: "#f5b73b",
+              wood: {
+                deep: "#1a0f08",
+                mid: "#3a2516",
+                light: "#5b3a22",
               },
+              gold: {
+                dim: "#7a5a1f",
+                base: "#c9a04a",
+                bright: "#f3d27a",
+                cream: "#f8e6b8",
+              },
+              parchment: {
+                light: "#f4e2b3",
+                base: "#e6cf8e",
+                dark: "#b8975c",
+                ink: "#2a1a0a",
+              },
+              mana: "#2b6cd0",
+              manaLight: "#5fa0ff",
+              attack: "#7d3a3a",
+              health: "#a32a2a",
             },
             fontFamily: {
-              display: ['"SF Pro Display"', "system-ui", "sans-serif"],
+              display: ['"Cinzel"', '"Noto Serif KR"', "serif"],
+              body: ['"Noto Serif KR"', "Cinzel", "serif"],
             },
           },
         },
       };
     </script>
     <style>
-      body {
-        background: radial-gradient(circle at 20% -10%, #1f1f1f 0%, #0d0d0d 60%);
+      :root {
+        --board-bg: radial-gradient(
+            ellipse at center 30%,
+            #4a2f1a 0%,
+            #2b1a0d 50%,
+            #100804 100%
+          );
       }
+      body {
+        background:
+          var(--board-bg),
+          repeating-linear-gradient(
+            115deg,
+            rgba(255, 220, 150, 0.02) 0 2px,
+            transparent 2px 6px
+          );
+        font-family: "Noto Serif KR", "Cinzel", serif;
+        color: #f0dfb6;
+      }
+
+      .gold-text {
+        background: linear-gradient(
+          to bottom,
+          #fff2c4 0%,
+          #f3d27a 45%,
+          #c9a04a 60%,
+          #8a6320 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+      }
+
+      .panel {
+        background:
+          linear-gradient(180deg, rgba(40, 22, 10, 0.92), rgba(20, 10, 4, 0.95)),
+          repeating-linear-gradient(
+            90deg,
+            rgba(180, 130, 60, 0.05) 0 1px,
+            transparent 1px 4px
+          );
+        border: 2px solid #6a4a1c;
+        border-radius: 14px;
+        box-shadow:
+          inset 0 0 0 1px rgba(243, 210, 122, 0.2),
+          inset 0 0 24px rgba(0, 0, 0, 0.6),
+          0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+
+      .btn-gold {
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        background:
+          linear-gradient(180deg, #f8e6b8 0%, #d4ad53 50%, #8a6320 100%);
+        color: #2a1a0a;
+        border: 2px solid #5a3e15;
+        border-radius: 999px;
+        padding: 0.5rem 1.1rem;
+        text-shadow: 0 1px 0 rgba(255, 240, 200, 0.5);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.4),
+          inset 0 -2px 4px rgba(120, 80, 30, 0.5),
+          0 4px 10px rgba(0, 0, 0, 0.5);
+        transition: transform 0.12s ease, filter 0.12s ease;
+      }
+      .btn-gold:hover:not(:disabled) {
+        transform: translateY(-1px) scale(1.02);
+        filter: brightness(1.08);
+      }
+      .btn-gold:disabled {
+        filter: grayscale(0.7) brightness(0.7);
+        cursor: not-allowed;
+      }
+
+      .btn-parchment {
+        font-family: "Cinzel", serif;
+        background: linear-gradient(180deg, #2a1a0a, #100804);
+        color: #f3d27a;
+        border: 1px solid #5a3e15;
+        border-radius: 6px;
+        padding: 0.25rem 0.65rem;
+        font-size: 11px;
+        letter-spacing: 0.05em;
+      }
+      .btn-parchment:hover {
+        background: linear-gradient(180deg, #3a2510, #1a0c04);
+      }
+
+      /* ---- Hearthstone-ish card ---- */
+      .hs-card {
+        position: relative;
+        width: 200px;
+        height: 290px;
+        flex-shrink: 0;
+        border-radius: 18px;
+        padding: 6px;
+        background:
+          linear-gradient(160deg, #f3d27a 0%, #b8862c 50%, #6a4912 100%);
+        box-shadow:
+          0 0 0 2px #2a1a0a,
+          0 6px 0 #1a0d04,
+          0 14px 30px rgba(0, 0, 0, 0.65);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        cursor: default;
+      }
+      .hs-card:hover {
+        transform: translateY(-6px) rotate(-0.5deg);
+        box-shadow:
+          0 0 0 2px #2a1a0a,
+          0 10px 0 #1a0d04,
+          0 18px 36px rgba(0, 0, 0, 0.75),
+          0 0 30px rgba(243, 210, 122, 0.35);
+      }
+      .hs-card[data-tier="5"] {
+        background: linear-gradient(160deg, #ff8a3d 0%, #d24a17 50%, #6a1a06 100%);
+      }
+      .hs-card[data-tier="4"] {
+        background: linear-gradient(160deg, #f3d27a 0%, #b8862c 50%, #6a4912 100%);
+      }
+      .hs-card[data-tier="3"] {
+        background: linear-gradient(160deg, #d6b86a 0%, #8e6c2a 50%, #4a3210 100%);
+      }
+      .hs-card[data-tier="2"], .hs-card[data-tier="1"] {
+        background: linear-gradient(160deg, #c9c2b3 0%, #6e6856 50%, #2e2a20 100%);
+      }
+
+      .hs-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 13px;
+        background:
+          radial-gradient(ellipse at 50% 0%, #f8e6b8 0%, #e6cf8e 35%, #c4a560 80%, #8e6f2c 100%);
+        overflow: hidden;
+        box-shadow: inset 0 0 0 2px #2a1a0a, inset 0 0 16px rgba(80, 50, 10, 0.5);
+      }
+
+      .hs-mana {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 35% 30%, #9bd4ff 0%, #2b6cd0 55%, #0b2a66 100%);
+        border: 3px solid #f3d27a;
+        box-shadow:
+          inset 0 -4px 6px rgba(0, 0, 0, 0.4),
+          0 2px 6px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Cinzel", serif;
+        font-weight: 900;
+        font-size: 22px;
+        color: #fff;
+        text-shadow: 0 2px 0 #0b2a66, 0 0 6px rgba(0, 0, 0, 0.6);
+        z-index: 3;
+      }
+
+      .hs-art {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        height: 130px;
+        border-radius: 50% / 40%;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse at center, var(--art-c1, #6b4a8a) 0%, var(--art-c2, #2b1a3d) 100%);
+        box-shadow: inset 0 0 0 3px #2a1a0a, inset 0 0 30px rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Cinzel", serif;
+        font-weight: 900;
+        font-size: 64px;
+        color: rgba(255, 255, 255, 0.85);
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+      }
+
+      .hs-name-ribbon {
+        position: absolute;
+        top: 138px;
+        left: 8px;
+        right: 8px;
+        height: 26px;
+        background:
+          linear-gradient(180deg, #2a1a0a 0%, #1a0d04 100%);
+        border: 2px solid #6a4912;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px;
+        font-family: "Cinzel", "Noto Serif KR", serif;
+        font-weight: 700;
+        font-size: 13px;
+        color: #f8e6b8;
+        text-shadow: 0 1px 2px #000;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        z-index: 2;
+      }
+
+      .hs-body {
+        position: absolute;
+        top: 168px;
+        left: 12px;
+        right: 12px;
+        bottom: 36px;
+        font-family: "Noto Serif KR", serif;
+        font-size: 10.5px;
+        line-height: 1.35;
+        color: #2a1a0a;
+        text-align: center;
+        padding: 4px 2px;
+      }
+      .hs-artist {
+        font-weight: 700;
+        font-size: 11px;
+        margin-bottom: 2px;
+      }
+      .hs-tag {
+        display: inline-block;
+        font-family: "Cinzel", serif;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        background: rgba(42, 26, 10, 0.85);
+        color: #f3d27a;
+        padding: 1px 6px;
+        border-radius: 3px;
+        margin-top: 2px;
+      }
+      .hs-buff {
+        font-size: 10px;
+        color: #5a3e15;
+        margin-top: 2px;
+      }
+      .hs-explicit {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        background: #a32a2a;
+        color: #fff;
+        font-family: "Cinzel", serif;
+        font-weight: 900;
+        font-size: 11px;
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #f3d27a;
+        z-index: 3;
+      }
+
+      .hs-attack, .hs-health {
+        position: absolute;
+        bottom: -6px;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Cinzel", serif;
+        font-weight: 900;
+        font-size: 26px;
+        color: #fff;
+        text-shadow: 0 2px 0 #000, 0 0 6px rgba(0, 0, 0, 0.7);
+        z-index: 3;
+      }
+      .hs-attack {
+        left: -2px;
+        background:
+          radial-gradient(circle at 35% 30%, #ffd9a3 0%, #c97a2a 50%, #4a230a 100%);
+        clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        border: none;
+      }
+      .hs-health {
+        right: -2px;
+        background:
+          radial-gradient(circle at 35% 30%, #ff9b9b 0%, #c43a3a 50%, #5a0a0a 100%);
+        clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      }
+      .hs-power-glow {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: 18px;
+        pointer-events: none;
+        box-shadow: 0 0 24px var(--glow-color, transparent);
+      }
+
+      .hs-actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 6px;
+        width: 200px;
+      }
+      .hs-actions button {
+        flex: 1;
+        font-family: "Cinzel", serif;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        padding: 6px 0;
+        border-radius: 6px;
+        border: 2px solid #2a1a0a;
+        cursor: pointer;
+        transition: filter 0.1s, transform 0.1s;
+      }
+      .hs-actions button:hover {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
+      }
+      .hs-actions .to-a {
+        background: linear-gradient(180deg, #c8e6a3 0%, #5a8a2c 100%);
+        color: #1a3008;
+      }
+      .hs-actions .to-b {
+        background: linear-gradient(180deg, #e6a3c8 0%, #8a2c5a 100%);
+        color: #fff;
+      }
+
+      /* Team minion row */
+      .team-minion {
+        position: relative;
+        background:
+          linear-gradient(180deg, rgba(243, 210, 122, 0.15), rgba(58, 37, 22, 0.6));
+        border: 1px solid #6a4912;
+        border-radius: 8px;
+        padding: 6px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .team-minion .name {
+        font-weight: 700;
+        color: #f8e6b8;
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .team-minion .artist {
+        font-size: 10px;
+        color: #c9a86a;
+      }
+      .team-minion .pwr {
+        font-family: "Cinzel", serif;
+        font-weight: 900;
+        font-size: 16px;
+        color: #f3d27a;
+        text-shadow: 0 1px 2px #000;
+      }
+
+      .meta-stone {
+        position: relative;
+        padding: 1.25rem;
+        border-radius: 14px;
+        text-align: center;
+        background:
+          radial-gradient(ellipse at top, #5a3e15 0%, #2a1a0a 80%);
+        border: 2px solid #6a4912;
+        box-shadow:
+          inset 0 0 12px rgba(0, 0, 0, 0.6),
+          0 4px 8px rgba(0, 0, 0, 0.5);
+      }
+      .meta-stone.active {
+        border-color: #f3d27a;
+        box-shadow:
+          inset 0 0 16px rgba(243, 210, 122, 0.3),
+          0 0 24px rgba(243, 210, 122, 0.5),
+          0 4px 8px rgba(0, 0, 0, 0.5);
+      }
+      .meta-stone .label {
+        font-family: "Cinzel", serif;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: #c9a86a;
+        margin-bottom: 6px;
+      }
+      .meta-stone .value {
+        font-family: "Cinzel", serif;
+        font-weight: 900;
+        font-size: 36px;
+        line-height: 1;
+      }
+
       .scrollbar-thin::-webkit-scrollbar {
-        width: 6px;
+        width: 8px;
+        height: 8px;
       }
       .scrollbar-thin::-webkit-scrollbar-thumb {
-        background: #333;
-        border-radius: 3px;
+        background: linear-gradient(180deg, #6a4912, #3a2516);
+        border-radius: 4px;
       }
-      .pulse-green {
-        box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.7);
-        animation: pulse-green 1.4s infinite;
+      .scrollbar-thin::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
       }
-      @keyframes pulse-green {
-        70% {
-          box-shadow: 0 0 0 12px rgba(29, 185, 84, 0);
-        }
-        100% {
-          box-shadow: 0 0 0 0 rgba(29, 185, 84, 0);
-        }
+
+      /* board strip — Hearthstone style horizontal lane */
+      .board {
+        background:
+          radial-gradient(ellipse at center, #6b4a2a 0%, #2a1808 75%),
+          repeating-linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0.15) 0 2px,
+            transparent 2px 8px
+          );
+        border-top: 3px solid #f3d27a;
+        border-bottom: 3px solid #f3d27a;
+        box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
       }
     </style>
   </head>
-  <body class="min-h-screen text-spotify-text font-display">
+  <body class="min-h-screen">
     <div class="max-w-7xl mx-auto px-6 py-8">
-      <header class="mb-8">
-        <div class="flex items-center gap-3">
-          <div
-            class="w-10 h-10 rounded-full bg-spotify-green flex items-center justify-center text-black text-xl font-black"
-          >
-            ♟
-          </div>
-          <div>
-            <h1 class="text-3xl font-black tracking-tight">Spotify Chess</h1>
-            <p class="text-spotify-muted text-sm">
-              "유명할수록 약해진다" — Spotify 메타데이터 기반 민주적 역밸런싱 오토배틀러
-            </p>
-          </div>
-        </div>
+      <header class="mb-6 text-center">
+        <h1
+          class="gold-text font-display text-5xl md:text-6xl font-black tracking-wide"
+          style="letter-spacing: 0.08em"
+        >
+          SPOTIFY CHESS
+        </h1>
+        <p class="mt-1 text-gold-base text-sm font-body">
+          유명할수록 약해진다 · 민주적 역밸런싱 오토배틀러
+        </p>
       </header>
 
       <!-- 메타 페널티 데모 패널 -->
-      <section
-        id="meta-panel"
-        class="mb-8 border border-spotify-border rounded-xl p-5 bg-spotify-card"
-      >
-        <div class="flex items-center justify-between mb-3">
+      <section id="meta-panel" class="panel mb-6 p-5">
+        <div class="flex items-center justify-between mb-4 gap-4 flex-wrap">
           <div>
-            <h2 class="text-lg font-bold">메타 페널티 시각화</h2>
-            <p class="text-xs text-spotify-muted">
-              동일 트랙이라도 픽률이 오르면 power가 줄어듭니다 (1 − pick_rate/100).
+            <h2 class="gold-text font-display text-xl font-bold tracking-wider">
+              META PENALTY · 메타 페널티
+            </h2>
+            <p class="text-xs text-gold-dim mt-1">
+              동일 트랙도 픽률이 오르면 power가 줄어듭니다 (1 − pick_rate / 100).
             </p>
           </div>
-          <button
-            id="meta-demo-btn"
-            class="bg-spotify-green text-black font-semibold px-4 py-2 rounded-full text-sm hover:scale-[1.03] transition"
-          >
-            BTS로 데모 실행
-          </button>
+          <button id="meta-demo-btn" class="btn-gold">BTS 데모 실행</button>
         </div>
-        <div id="meta-result" class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-          <div class="text-spotify-muted">아직 실행 전 — 우측 버튼을 눌러보세요.</div>
+        <div id="meta-result" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="text-gold-dim text-sm col-span-full text-center py-6">
+            우측 버튼을 눌러 동일 트랙의 픽률 변화를 비교해보세요.
+          </div>
         </div>
       </section>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- 상점 -->
-        <section
-          class="border border-spotify-border rounded-xl bg-spotify-card flex flex-col"
+      <!-- 상점 -->
+      <section class="panel mb-6">
+        <div class="flex items-center justify-between p-4 border-b-2 border-gold-dim/40 gap-3 flex-wrap">
+          <div>
+            <h2 class="gold-text font-display text-xl font-bold tracking-wider">
+              SHOP · 술집
+            </h2>
+            <p class="text-xs text-gold-dim mt-1">
+              카드의 <span class="text-emerald-300">→ A</span> /
+              <span class="text-pink-300">→ B</span> 버튼으로 보드에 소환
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input
+              id="shop-count"
+              type="number"
+              value="5"
+              min="1"
+              max="10"
+              class="w-16 bg-wood-deep border border-gold-dim/60 rounded-md px-2 py-1.5 text-sm text-gold-cream font-display"
+            />
+            <button id="roll-btn" class="btn-gold">ROLL</button>
+          </div>
+        </div>
+        <div
+          id="shop-grid"
+          class="p-6 flex flex-wrap gap-x-4 gap-y-12 justify-center max-h-[640px] overflow-y-auto scrollbar-thin"
         >
-          <div class="flex items-center justify-between p-5 border-b border-spotify-border">
-            <div>
-              <h2 class="text-lg font-bold">상점 (Shop)</h2>
-              <p class="text-xs text-spotify-muted">
-                Roll 후 카드의 <span class="text-spotify-green">→ A</span> /
-                <span class="text-spotify-pink">→ B</span> 버튼으로 팀에 추가
-              </p>
+          <div class="text-gold-dim text-sm py-12">상점을 굴려보세요…</div>
+        </div>
+      </section>
+
+      <!-- 배틀 보드 -->
+      <section class="panel mb-6">
+        <div class="flex items-center justify-between p-4 border-b-2 border-gold-dim/40 gap-3 flex-wrap">
+          <div>
+            <h2 class="gold-text font-display text-xl font-bold tracking-wider">
+              BATTLEFIELD · 결투장
+            </h2>
+            <p class="text-xs text-gold-dim mt-1">두 팀의 power 합산을 비교합니다.</p>
+          </div>
+          <button id="simulate-btn" class="btn-gold" disabled>SIMULATE</button>
+        </div>
+
+        <!-- Team A lane -->
+        <div class="board py-4 px-6 border-t-0">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-display tracking-widest text-emerald-200 font-bold text-sm">
+              ⚔ TEAM A
             </div>
-            <div class="flex items-center gap-2">
-              <input
-                id="shop-count"
-                type="number"
-                value="5"
-                min="1"
-                max="10"
-                class="w-16 bg-black border border-spotify-border rounded-md px-2 py-1 text-sm"
-              />
-              <button
-                id="roll-btn"
-                class="bg-spotify-green text-black font-semibold px-4 py-1.5 rounded-full text-sm hover:scale-[1.03] transition"
-              >
-                Roll
-              </button>
+            <div class="font-display text-gold-bright text-lg">
+              <span id="team-a-score">0</span>
             </div>
           </div>
           <div
-            id="shop-grid"
-            class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[520px] overflow-y-auto scrollbar-thin"
+            id="team-a"
+            class="flex flex-wrap gap-2 min-h-[64px] items-stretch"
           >
-            <div class="col-span-full text-center text-spotify-muted py-12">
-              Roll 버튼을 눌러 상점을 굴려보세요.
+            <div class="text-gold-dim text-xs italic self-center">
+              상점에서 카드를 → A 로 보내세요
             </div>
           </div>
-        </section>
+        </div>
 
-        <!-- 배틀 -->
-        <section
-          class="border border-spotify-border rounded-xl bg-spotify-card flex flex-col"
-        >
-          <div class="flex items-center justify-between p-5 border-b border-spotify-border">
-            <div>
-              <h2 class="text-lg font-bold">배틀 (Battle)</h2>
-              <p class="text-xs text-spotify-muted">
-                두 팀의 power 합산을 비교합니다.
-              </p>
+        <div class="h-[2px] bg-gradient-to-r from-transparent via-gold-base to-transparent"></div>
+
+        <!-- Team B lane -->
+        <div class="board py-4 px-6 border-b-0">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-display tracking-widest text-pink-200 font-bold text-sm">
+              ⚔ TEAM B
             </div>
-            <button
-              id="simulate-btn"
-              class="bg-spotify-green text-black font-semibold px-4 py-1.5 rounded-full text-sm hover:scale-[1.03] transition disabled:opacity-30 disabled:cursor-not-allowed"
-              disabled
-            >
-              Simulate
-            </button>
-          </div>
-          <div class="grid grid-cols-2 divide-x divide-spotify-border">
-            <div class="p-4">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="font-semibold text-spotify-green">Team A</h3>
-                <span id="team-a-score" class="text-xs text-spotify-muted">0.0</span>
-              </div>
-              <div
-                id="team-a"
-                class="space-y-2 min-h-[200px] max-h-[400px] overflow-y-auto scrollbar-thin"
-              >
-                <div class="text-xs text-spotify-muted">비어 있음</div>
-              </div>
-            </div>
-            <div class="p-4">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="font-semibold text-spotify-pink">Team B</h3>
-                <span id="team-b-score" class="text-xs text-spotify-muted">0.0</span>
-              </div>
-              <div
-                id="team-b"
-                class="space-y-2 min-h-[200px] max-h-[400px] overflow-y-auto scrollbar-thin"
-              >
-                <div class="text-xs text-spotify-muted">비어 있음</div>
-              </div>
+            <div class="font-display text-gold-bright text-lg">
+              <span id="team-b-score">0</span>
             </div>
           </div>
           <div
-            id="battle-result"
-            class="border-t border-spotify-border p-5 text-sm hidden"
-          ></div>
-        </section>
-      </div>
+            id="team-b"
+            class="flex flex-wrap gap-2 min-h-[64px] items-stretch"
+          >
+            <div class="text-gold-dim text-xs italic self-center">
+              상점에서 카드를 → B 로 보내세요
+            </div>
+          </div>
+        </div>
 
-      <footer class="mt-10 text-xs text-spotify-muted text-center">
+        <div
+          id="battle-result"
+          class="border-t-2 border-gold-dim/40 p-5 hidden"
+        ></div>
+      </section>
+
+      <footer class="text-xs text-gold-dim text-center mt-10 font-body">
         해커톤 MVP · API 문서 →
-        <a href="/docs" class="underline hover:text-spotify-green">/docs</a>
+        <a href="/docs" class="underline hover:text-gold-bright">/docs</a>
       </footer>
     </div>
 
