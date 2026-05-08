@@ -1103,7 +1103,7 @@ h3 {
   bottom: 18px;
   right: 18px;
   z-index: 1000;
-  display: grid;
+  display: none;
   grid-template-columns: 100px minmax(0, 1fr);
   gap: 14px;
   width: min(360px, calc(100vw - 36px));
