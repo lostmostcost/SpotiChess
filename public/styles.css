@@ -472,6 +472,86 @@ h3 {
   text-align: center;
 }
 
+.combat-card {
+  width: min(760px, 100%);
+  text-align: left;
+}
+
+.combat-card h2,
+.combat-card > .muted,
+.combat-card > .eyebrow {
+  text-align: center;
+}
+
+.combat-pulse {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.combat-pulse span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-primary-hover);
+  box-shadow: 0 0 18px rgba(30, 215, 96, 0.72);
+  animation: pulseBeat 900ms ease-in-out infinite alternate;
+}
+
+.combat-pulse span:nth-child(2) {
+  animation-delay: 160ms;
+}
+
+.combat-pulse span:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+.combat-log {
+  max-height: min(46vh, 420px);
+  overflow-y: auto;
+}
+
+.combat-log li {
+  animation: logEnter 260ms ease-out both;
+}
+
+.log-artist {
+  color: var(--color-warning);
+  font-weight: 900;
+  text-shadow: 0 0 14px rgba(245, 197, 66, 0.25);
+}
+
+.log-track {
+  color: var(--color-primary-hover);
+  font-weight: 900;
+  text-shadow: 0 0 14px rgba(30, 215, 96, 0.28);
+}
+
+@keyframes pulseBeat {
+  from {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes logEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .score-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

@@ -6,6 +6,8 @@ const state = {
   game: null,
   selectedUnitId: null,
   phase: "loading",
+  combatLogs: [],
+  combatDone: false,
   toast: ""
 };
 
@@ -25,6 +27,22 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function renderHighlightedLog(log) {
+  return escapeHtml(log)
+    .replace(
+      /(vs )([^<]+?)(의 곡)/g,
+      '$1<span class="log-artist">$2</span>$3'
+    )
+    .replace(
+      /(적 )([^<]+?)(의 )/g,
+      '$1<span class="log-artist">$2</span>$3'
+    )
+    .replace(
+      /(&#039;)(.+?)(&#039;)/g,
+      '$1<span class="log-track">$2</span>$3'
+    );
 }
 
 function slug(value) {
@@ -70,6 +88,12 @@ function showToast(message) {
     state.toast = "";
     render();
   }, 2500);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
 async function api(path, options = {}) {
@@ -179,12 +203,34 @@ async function startCombat() {
   }
 
   state.phase = "combat";
+  state.combatLogs = ["스테이지 조명이 어두워지고, 상대 아티스트의 트랙이 입장합니다."];
+  state.combatDone = false;
   render();
 
-  await perform(async () => {
+  try {
     const game = await api(`/game/${state.sessionId}/start_combat`, { method: "POST" });
-    window.setTimeout(() => updateGame(game), 650);
-  });
+    await playCombatLogs(game.last_battle_log ?? []);
+    state.combatDone = true;
+    render();
+    await sleep(1100);
+    updateGame(game);
+  } catch (error) {
+    state.phase = "shop";
+    state.combatLogs = [];
+    state.combatDone = false;
+    showToast(error.message);
+  }
+}
+
+async function playCombatLogs(logs) {
+  const dramaticLogs = logs.length > 0 ? logs : ["전투 로그가 비어 있습니다."];
+  await sleep(800);
+
+  for (const log of dramaticLogs) {
+    state.combatLogs = [...state.combatLogs, log].slice(-9);
+    render();
+    await sleep(log.includes("승리") || log.includes("패배") ? 1300 : 850);
+  }
 }
 
 async function nextRound() {
@@ -201,6 +247,8 @@ async function restartGame() {
   state.game = null;
   state.selectedUnitId = null;
   state.phase = "loading";
+  state.combatLogs = [];
+  state.combatDone = false;
   await boot();
 }
 
@@ -215,6 +263,8 @@ async function perform(action) {
 function updateGame(game) {
   state.game = game;
   state.phase = normalizePhase(game.phase);
+  state.combatLogs = [];
+  state.combatDone = false;
   render();
 }
 
@@ -451,7 +501,7 @@ function renderBattleLog() {
 
   return `
     <ul class="log-list">
-      ${logs.slice(-8).map((log) => `<li>${escapeHtml(log)}</li>`).join("")}
+      ${logs.slice(-8).map((log) => `<li>${renderHighlightedLog(log)}</li>`).join("")}
     </ul>
   `;
 }
@@ -461,10 +511,20 @@ function renderCombatOverlay() {
     <main class="game-screen">
       ${renderHud()}
       <div class="overlay">
-        <div class="result-card">
+        <div class="result-card combat-card">
           <p class="eyebrow">Combat</p>
-          <h2>백엔드 전투 시뮬레이션 중</h2>
-          <p class="muted">FastAPI 서버가 현재 보드와 라운드를 기준으로 자동 전투를 계산합니다.</p>
+          <h2>${state.combatDone ? "전투 종료" : "라이브 배틀 진행 중"}</h2>
+          <p class="muted">
+            ${state.combatDone ? "결과를 정산하는 중입니다." : "상대 아티스트의 곡과 턴마다 공격을 주고받습니다."}
+          </p>
+          <div class="combat-pulse" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <ul class="log-list combat-log" aria-live="polite">
+            ${state.combatLogs.map((log) => `<li>${renderHighlightedLog(log)}</li>`).join("")}
+          </ul>
         </div>
       </div>
       ${renderToast()}
