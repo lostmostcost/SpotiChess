@@ -34,23 +34,35 @@ function fmt(n) {
   return Number(n).toLocaleString("ko-KR", { maximumFractionDigits: 2 });
 }
 
-function genreColor(tag) {
-  return (
-    {
-      "K-Pop": "bg-pink-500/20 text-pink-300",
-      "Hip-Hop": "bg-amber-500/20 text-amber-300",
-      Rock: "bg-red-500/20 text-red-300",
-      Indie: "bg-emerald-500/20 text-emerald-300",
-      EDM: "bg-cyan-500/20 text-cyan-300",
-      Trot: "bg-violet-500/20 text-violet-300",
-    }[tag] || "bg-zinc-500/20 text-zinc-300"
-  );
+function powerColor(power) {
+  if (power >= 80) return "text-emerald-300";
+  if (power >= 50) return "text-amber-300";
+  return "text-rose-300";
 }
 
-function powerColor(power) {
-  if (power >= 80) return "text-spotify-green";
-  if (power >= 50) return "text-spotify-amber";
-  return "text-spotify-pink";
+function powerGlow(power) {
+  if (power >= 80) return "rgba(110, 220, 130, 0.55)";
+  if (power >= 50) return "rgba(243, 210, 122, 0.55)";
+  return "rgba(220, 110, 110, 0.45)";
+}
+
+// 아티스트 이름을 두 톤의 placeholder 색으로 변환 (앨범아트 자리).
+function artistColors(name) {
+  let h = 0;
+  for (let i = 0; i < (name || "").length; i++) {
+    h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  }
+  const hue = h % 360;
+  return [
+    `hsl(${hue}, 70%, 55%)`,
+    `hsl(${(hue + 40) % 360}, 60%, 22%)`,
+  ];
+}
+
+function firstGlyph(text) {
+  if (!text) return "?";
+  // 한글/영문 첫 1자 (서로게이트 페어 안전).
+  return Array.from(text)[0].toUpperCase();
 }
 
 // SynergyBuffs(Optional[str]…)에서 활성 버프만 한 줄로 요약.
@@ -85,162 +97,101 @@ async function api(path, { method = "GET", body } = {}) {
 }
 
 // ---------- Card rendering ----------
+// 하스스톤 스타일 카드. CSS 클래스는 frontend/index.html의 <style>에 정의.
 function unitCard(unit, opts = {}) {
-  const actions = opts.compact
-    ? null
-    : el(
-        "div",
-        { class: "flex gap-2 mt-3" },
-        el(
-          "button",
-          {
-            class:
-              "flex-1 bg-spotify-green/90 text-black text-xs font-semibold rounded-full py-1 hover:bg-spotify-green",
-            onClick: () => addToTeam("A", unit),
-          },
-          "→ A",
-        ),
-        el(
-          "button",
-          {
-            class:
-              "flex-1 bg-spotify-pink/90 text-black text-xs font-semibold rounded-full py-1 hover:bg-spotify-pink",
-            onClick: () => addToTeam("B", unit),
-          },
-          "→ B",
-        ),
-      );
-
   const buffs = buffSummary(unit.synergy_buffs);
+  const [c1, c2] = artistColors(unit.artist_name);
+
+  const inner = el(
+    "div",
+    { class: "hs-inner" },
+    el("div", { class: "hs-mana" }, String(unit.cost)),
+    unit.explicit_proc_chance > 0
+      ? el("div", { class: "hs-explicit", title: `19금 디버프 ${unit.explicit_proc_chance}%` }, "E")
+      : null,
+    el(
+      "div",
+      {
+        class: "hs-art",
+        style: `--art-c1:${c1};--art-c2:${c2};`,
+      },
+      firstGlyph(unit.artist_name),
+    ),
+    el("div", { class: "hs-name-ribbon" }, unit.track_name),
+    el(
+      "div",
+      { class: "hs-body" },
+      el("div", { class: "hs-artist" }, unit.artist_name),
+      unit.synergy_tag
+        ? el("div", null, el("span", { class: "hs-tag" }, unit.synergy_tag))
+        : null,
+      buffs ? el("div", { class: "hs-buff" }, buffs) : null,
+      el(
+        "div",
+        { class: "hs-buff", style: "margin-top:auto;" },
+        `AS ${fmt(unit.attack_speed)}`,
+      ),
+    ),
+    el("div", { class: "hs-attack", title: `공격력 ${fmt(unit.attack)}` }, String(Math.round(unit.attack))),
+    el("div", { class: "hs-health", title: `체력 ${fmt(unit.hp)}` }, String(Math.round(unit.hp))),
+    el("div", {
+      class: "hs-power-glow",
+      style: `--glow-color:${powerGlow(unit.power)};`,
+    }),
+  );
+
+  const card = el(
+    "div",
+    {
+      class: "hs-card",
+      dataset: { tier: String(unit.cost) },
+      title: `Power ${fmt(unit.power)}`,
+    },
+    inner,
+  );
+
+  if (opts.compact) return card;
 
   return el(
     "div",
-    {
-      class:
-        "border border-spotify-border bg-spotify-card hover:bg-spotify-cardHover rounded-lg p-3 transition",
-    },
+    { class: "flex flex-col items-center" },
+    card,
     el(
       "div",
-      { class: "flex items-start justify-between gap-2 mb-2" },
+      { class: "hs-actions" },
       el(
-        "div",
-        { class: "min-w-0" },
-        el("div", { class: "font-semibold truncate" }, unit.track_name),
-        el("div", { class: "text-xs text-spotify-muted truncate" }, unit.artist_name),
+        "button",
+        { class: "to-a", onClick: () => addToTeam("A", unit) },
+        "→ A",
       ),
       el(
-        "span",
-        {
-          class:
-            "shrink-0 px-2 py-0.5 rounded text-[10px] font-bold bg-black/40 border border-spotify-border",
-        },
-        `${unit.cost}★`,
+        "button",
+        { class: "to-b", onClick: () => addToTeam("B", unit) },
+        "→ B",
       ),
     ),
-    el(
-      "div",
-      { class: "flex flex-wrap gap-1 mb-2" },
-      unit.synergy_tag
-        ? el(
-            "span",
-            { class: `text-[10px] px-2 py-0.5 rounded ${genreColor(unit.synergy_tag)}` },
-            unit.synergy_tag,
-          )
-        : null,
-      unit.explicit_proc_chance > 0
-        ? el(
-            "span",
-            { class: "text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-300" },
-            `🅴 ${unit.explicit_proc_chance}%`,
-          )
-        : null,
-      unit.star_level > 1
-        ? el(
-            "span",
-            {
-              class:
-                "text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300",
-            },
-            `${"★".repeat(unit.star_level)}`,
-          )
-        : null,
-    ),
-    el(
-      "div",
-      { class: "grid grid-cols-4 gap-2 text-center text-xs" },
-      el(
-        "div",
-        null,
-        el("div", { class: "text-spotify-muted text-[10px]" }, "POWER"),
-        el(
-          "div",
-          { class: `font-bold text-base ${powerColor(unit.power)}` },
-          fmt(unit.power),
-        ),
-      ),
-      el(
-        "div",
-        null,
-        el("div", { class: "text-spotify-muted text-[10px]" }, "HP"),
-        el("div", { class: "font-semibold" }, fmt(unit.hp)),
-      ),
-      el(
-        "div",
-        null,
-        el("div", { class: "text-spotify-muted text-[10px]" }, "ATK"),
-        el("div", { class: "font-semibold" }, fmt(unit.attack)),
-      ),
-      el(
-        "div",
-        null,
-        el("div", { class: "text-spotify-muted text-[10px]" }, "AS"),
-        el("div", { class: "font-semibold" }, fmt(unit.attack_speed)),
-      ),
-    ),
-    buffs
-      ? el(
-          "div",
-          { class: "text-[10px] text-spotify-muted mt-2 truncate" },
-          buffs,
-        )
-      : null,
-    actions,
   );
 }
 
 function teamRow(side, unit, idx) {
   return el(
     "div",
-    {
-      class:
-        "flex items-center justify-between gap-2 bg-black/30 border border-spotify-border rounded-md px-3 py-2",
-    },
+    { class: "team-minion" },
     el(
       "div",
-      { class: "min-w-0" },
-      el("div", { class: "text-sm font-medium truncate" }, unit.track_name),
-      el(
-        "div",
-        { class: "text-[10px] text-spotify-muted truncate" },
-        unit.artist_name,
-      ),
+      { class: "min-w-0 flex-1" },
+      el("div", { class: "name" }, unit.track_name),
+      el("div", { class: "artist" }, unit.artist_name),
     ),
+    el("div", { class: "pwr" }, fmt(unit.power)),
     el(
-      "div",
-      { class: "flex items-center gap-2 shrink-0" },
-      el(
-        "span",
-        { class: `text-sm font-bold ${powerColor(unit.power)}` },
-        fmt(unit.power),
-      ),
-      el(
-        "button",
-        {
-          class: "text-spotify-muted hover:text-spotify-pink text-xs px-1",
-          onClick: () => removeFromTeam(side, idx),
-        },
-        "✕",
-      ),
+      "button",
+      {
+        class: "text-gold-dim hover:text-rose-300 text-xs px-1",
+        onClick: () => removeFromTeam(side, idx),
+        title: "제거",
+      },
+      "✕",
     ),
   );
 }
@@ -253,8 +204,8 @@ function renderShop() {
     grid.append(
       el(
         "div",
-        { class: "col-span-full text-center text-spotify-muted py-12" },
-        "Roll 버튼을 눌러 상점을 굴려보세요.",
+        { class: "text-gold-dim text-sm py-12" },
+        "상점을 굴려보세요…",
       ),
     );
     return;
@@ -269,7 +220,13 @@ function renderTeam(side) {
   $(side === "A" ? "team-a-score" : "team-b-score").textContent = fmt(score);
   node.innerHTML = "";
   if (list.length === 0) {
-    node.append(el("div", { class: "text-xs text-spotify-muted" }, "비어 있음"));
+    node.append(
+      el(
+        "div",
+        { class: "text-gold-dim text-xs italic self-center" },
+        side === "A" ? "→ A 로 카드를 보내세요" : "→ B 로 카드를 보내세요",
+      ),
+    );
   } else {
     list.forEach((u, i) => node.append(teamRow(side, u, i)));
   }
@@ -283,41 +240,59 @@ function renderBattle(result) {
   box.innerHTML = "";
   const winnerColor =
     result.winner === "team_a"
-      ? "text-spotify-green"
+      ? "text-emerald-300"
       : result.winner === "team_b"
-        ? "text-spotify-pink"
-        : "text-spotify-amber";
+        ? "text-pink-300"
+        : "text-amber-300";
   const winnerLabel =
     {
-      team_a: "Team A 승리 🏆",
-      team_b: "Team B 승리 🏆",
-      draw: "무승부",
+      team_a: "TEAM A · 승리",
+      team_b: "TEAM B · 승리",
+      draw: "DRAW · 무승부",
     }[result.winner] || result.winner;
   box.append(
     el(
       "div",
-      { class: `text-lg font-bold mb-2 ${winnerColor}` },
-      `${winnerLabel} (격차 ${fmt(result.score_gap)})`,
+      {
+        class: `font-display tracking-widest text-2xl font-black mb-3 ${winnerColor}`,
+      },
+      `🏆 ${winnerLabel} (격차 ${fmt(result.score_gap)})`,
     ),
     el(
       "div",
       { class: "grid grid-cols-2 gap-3 text-xs mb-3" },
       el(
         "div",
-        { class: "bg-black/30 rounded p-2" },
-        el("div", { class: "text-spotify-muted" }, "Team A 총 파워"),
-        el("div", { class: "font-bold" }, fmt(result.team_a_power)),
+        { class: "bg-wood-deep/70 border border-gold-dim/40 rounded p-3" },
+        el(
+          "div",
+          { class: "text-gold-dim font-display tracking-widest mb-1" },
+          "TEAM A POWER",
+        ),
+        el(
+          "div",
+          { class: "font-display text-2xl text-gold-bright" },
+          fmt(result.team_a_power),
+        ),
       ),
       el(
         "div",
-        { class: "bg-black/30 rounded p-2" },
-        el("div", { class: "text-spotify-muted" }, "Team B 총 파워"),
-        el("div", { class: "font-bold" }, fmt(result.team_b_power)),
+        { class: "bg-wood-deep/70 border border-gold-dim/40 rounded p-3" },
+        el(
+          "div",
+          { class: "text-gold-dim font-display tracking-widest mb-1" },
+          "TEAM B POWER",
+        ),
+        el(
+          "div",
+          { class: "font-display text-2xl text-gold-bright" },
+          fmt(result.team_b_power),
+        ),
       ),
     ),
     el(
       "ul",
-      { class: "text-xs space-y-1 text-spotify-muted" },
+      { class: "text-xs space-y-1 text-gold-cream/80" },
       ...result.logs.map((l) => el("li", null, `· ${l}`)),
     ),
   );
@@ -328,7 +303,7 @@ async function rollShop() {
   const count = parseInt($("shop-count").value, 10) || 5;
   const btn = $("roll-btn");
   btn.disabled = true;
-  btn.textContent = "Rolling…";
+  btn.textContent = "ROLLING…";
   try {
     // /shop/roll 응답은 list[UnitStats] 그 자체 (CLAUDE.md §4.1).
     const data = await api(`/shop/roll?count=${count}`);
@@ -338,7 +313,7 @@ async function rollShop() {
     alert(`상점 롤 실패: ${err.message}`);
   } finally {
     btn.disabled = false;
-    btn.textContent = "Roll";
+    btn.textContent = "ROLL";
   }
 }
 
@@ -357,7 +332,7 @@ function removeFromTeam(side, idx) {
 async function simulate() {
   const btn = $("simulate-btn");
   btn.disabled = true;
-  btn.textContent = "Simulating…";
+  btn.textContent = "FIGHTING…";
   try {
     const result = await api("/battle/simulate", {
       method: "POST",
@@ -367,7 +342,7 @@ async function simulate() {
   } catch (err) {
     alert(`전투 실패: ${err.message}`);
   } finally {
-    btn.textContent = "Simulate";
+    btn.textContent = "SIMULATE";
     btn.disabled = state.teamA.length === 0 || state.teamB.length === 0;
   }
 }
@@ -389,7 +364,7 @@ async function metaDemo() {
   const rates = [5, 30, 60];
   const btn = $("meta-demo-btn");
   btn.disabled = true;
-  btn.textContent = "Computing…";
+  btn.textContent = "READING…";
   try {
     const results = await Promise.all(
       rates.map((rate) =>
@@ -402,27 +377,22 @@ async function metaDemo() {
     const grid = $("meta-result");
     grid.innerHTML = "";
     results.forEach((unit, i) => {
+      const cls = i === 0 ? "meta-stone active" : "meta-stone";
       grid.append(
         el(
           "div",
-          {
-            class: `border rounded-lg p-4 ${
-              i === 0
-                ? "border-spotify-green bg-spotify-greenSoft pulse-green"
-                : "border-spotify-border bg-black/30"
-            }`,
-          },
+          { class: cls },
+          el("div", { class: "label" }, `PICK RATE · ${rates[i]}%`),
           el(
             "div",
-            { class: "text-xs text-spotify-muted mb-1" },
-            `pick rate = ${rates[i]}%`,
-          ),
-          el(
-            "div",
-            { class: `text-3xl font-black ${powerColor(unit.power)}` },
+            { class: `value ${powerColor(unit.power)}` },
             fmt(unit.power),
           ),
-          el("div", { class: "text-[10px] text-spotify-muted mt-1" }, "power"),
+          el(
+            "div",
+            { class: "text-[10px] text-gold-dim mt-1 font-display tracking-widest" },
+            "POWER",
+          ),
         ),
       );
     });
@@ -430,7 +400,7 @@ async function metaDemo() {
     alert(`메타 데모 실패: ${err.message}`);
   } finally {
     btn.disabled = false;
-    btn.textContent = "BTS로 데모 실행";
+    btn.textContent = "BTS 데모 실행";
   }
 }
 
