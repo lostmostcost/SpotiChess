@@ -498,8 +498,41 @@ h3 {
 
 .music-panel {
   display: grid;
+  position: relative;
   min-height: 0;
   height: 100%;
+}
+
+#musicPortalHost {
+  min-height: 0;
+  height: 100%;
+  min-height: min(280px, 42vh);
+}
+
+#musicPortalRoot {
+  position: fixed;
+  display: block;
+  min-height: 0;
+}
+
+#musicPortalRoot.music-docked {
+  z-index: 5;
+}
+
+#musicPortalRoot.music-background {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#musicPortalRoot.music-parked {
+  left: -9999px;
+  top: auto;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .music-player {
@@ -518,6 +551,13 @@ h3 {
 }
 
 .music-panel .music-player {
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+#musicPortalRoot.music-docked .music-player {
   height: 100%;
   border: 0;
   padding: 0;

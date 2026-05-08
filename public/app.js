@@ -2,6 +2,9 @@ const app = document.querySelector("#app");
 const combatOverlayRoot = document.createElement("div");
 combatOverlayRoot.id = "combatOverlayRoot";
 document.body.appendChild(combatOverlayRoot);
+const musicPortalRoot = document.createElement("div");
+musicPortalRoot.id = "musicPortalRoot";
+document.body.appendChild(musicPortalRoot);
 
 const state = {
   sessionId: null,
@@ -31,6 +34,7 @@ const state = {
 
 const bgmAudio = new Audio();
 bgmAudio.volume = state.music.volume;
+let renderedMusicKey = "";
 
 const GAME_CONFIG = {
   unitCost: 3,
@@ -109,6 +113,67 @@ function showToast(message) {
     state.toast = "";
     render();
   }, 2500);
+}
+
+function setAppHtml(html) {
+  app.innerHTML = html;
+  mountMusicPortal();
+}
+
+function mountMusicPortal() {
+  const host = document.querySelector("#musicPortalHost");
+  musicPortalRoot.hidden = false;
+
+  if (host) {
+    musicPortalRoot.classList.add("music-docked");
+    musicPortalRoot.classList.remove("music-parked");
+    musicPortalRoot.classList.remove("music-background");
+    renderMusicPortal();
+    syncMusicPortalPosition();
+  } else if (musicPortalRoot.innerHTML && state.music.playlist.length > 0) {
+    musicPortalRoot.classList.add("music-docked");
+    musicPortalRoot.classList.add("music-background");
+    musicPortalRoot.classList.remove("music-parked");
+  } else {
+    musicPortalRoot.classList.remove("music-docked");
+    musicPortalRoot.classList.remove("music-background");
+    musicPortalRoot.classList.add("music-parked");
+  }
+}
+
+function syncMusicPortalPosition() {
+  const host = document.querySelector("#musicPortalHost");
+  if (!host || musicPortalRoot.classList.contains("music-parked")) {
+    return;
+  }
+
+  const applyRect = () => {
+    const rect = host.getBoundingClientRect();
+    const panelRect = host.closest(".music-panel")?.getBoundingClientRect();
+    const sourceRect = rect.width > 0 && rect.height > 0 ? rect : panelRect;
+
+    if (!sourceRect) {
+      return;
+    }
+
+    const width = Math.max(260, sourceRect.width);
+    const height = Math.max(240, sourceRect.height);
+
+    musicPortalRoot.style.left = `${sourceRect.left}px`;
+    musicPortalRoot.style.top = `${sourceRect.top}px`;
+    musicPortalRoot.style.width = `${width}px`;
+    musicPortalRoot.style.height = `${height}px`;
+  };
+
+  applyRect();
+
+  window.requestAnimationFrame(() => {
+    const latestHost = document.querySelector("#musicPortalHost");
+    if (!latestHost || musicPortalRoot.classList.contains("music-parked")) {
+      return;
+    }
+    applyRect();
+  });
 }
 
 function sleep(ms) {
@@ -485,6 +550,8 @@ function setMusicVolume(value) {
 function resetMusic() {
   bgmAudio.pause();
   bgmAudio.removeAttribute("src");
+  renderedMusicKey = "";
+  musicPortalRoot.innerHTML = "";
   state.music = {
     playlist: [],
     currentIndex: 0,
@@ -551,7 +618,7 @@ function imageTag(src, alt, className) {
 }
 
 function renderStartScreen() {
-  app.innerHTML = `
+  setAppHtml(`
     <section class="start-screen">
       <div class="start-shell">
         <div class="hero">
@@ -568,7 +635,7 @@ function renderStartScreen() {
       </div>
       ${renderToast()}
     </section>
-  `;
+  `);
 
   document.querySelectorAll("[data-artist-id]").forEach((button) => {
     button.addEventListener("click", () => selectPersona(button.dataset.artistId));
@@ -596,7 +663,7 @@ function renderArtistCard(artist) {
 function renderGameScreen() {
   const selectedUnit = getSelectedUnit();
 
-  app.innerHTML = `
+  setAppHtml(`
     <main class="game-screen">
       ${renderHud()}
       <div class="main-layout">
@@ -640,13 +707,13 @@ function renderGameScreen() {
             </div>
           </section>
           <section class="panel music-panel">
-            ${renderMusicPlayer()}
+            <div id="musicPortalHost"></div>
           </section>
         </aside>
       </div>
       ${renderToast()}
     </main>
-  `;
+  `);
 
   bindGameEvents();
 }
@@ -757,7 +824,32 @@ function renderUnitDetail(unit) {
   `;
 }
 
-function renderMusicPlayer() {
+function getMusicRenderKey() {
+  const track = getCurrentMusicTrack();
+  return [
+    state.music.loading ? "loading" : "ready",
+    state.music.configured ? "configured" : "not-configured",
+    state.music.currentIndex,
+    state.music.isPlaying ? "playing" : "paused",
+    track?.preview_url ?? "",
+    track?.uri ?? "",
+    track?.external_url ?? "",
+    state.music.error,
+    state.music.volume
+  ].join("|");
+}
+
+function renderMusicPortal(force = false) {
+  const key = getMusicRenderKey();
+  if (!force && renderedMusicKey === key && musicPortalRoot.innerHTML) {
+    return;
+  }
+  renderedMusicKey = key;
+  musicPortalRoot.innerHTML = renderMusicPlayerMarkup();
+  bindMusicControls();
+}
+
+function renderMusicPlayerMarkup() {
   const track = getCurrentMusicTrack();
   const embedUrl = spotifyEmbedUrl(track);
   const usesEmbed = !track?.preview_url && embedUrl;
@@ -957,7 +1049,7 @@ function renderMatchupArtist(artist, label) {
 function renderResolution() {
   const won = state.game.last_result === "win";
 
-  app.innerHTML = `
+  setAppHtml(`
     <main class="game-screen">
       ${renderHud()}
       <div class="overlay">
@@ -973,7 +1065,7 @@ function renderResolution() {
       </div>
       ${renderToast()}
     </main>
-  `;
+  `);
 
   document.querySelector("#nextRound").addEventListener("click", nextRound);
 }
@@ -981,7 +1073,7 @@ function renderResolution() {
 function renderEndScreen(kind) {
   const clear = kind === "clear";
 
-  app.innerHTML = `
+  setAppHtml(`
     <section class="end-screen">
       <div class="end-card">
         <p class="eyebrow">${clear ? "Clear" : "Game Over"}</p>
@@ -998,7 +1090,7 @@ function renderEndScreen(kind) {
       </div>
       ${renderToast()}
     </section>
-  `;
+  `);
 
   document.querySelector("#restartGame").addEventListener("click", restartGame);
 }
@@ -1019,7 +1111,6 @@ function bindGameEvents() {
   document.querySelector("#buyExp").addEventListener("click", buyExp);
   document.querySelector("#sellUnit").addEventListener("click", sellSelectedUnit);
   bindBattleSpeedControl("#battleSpeed");
-  bindMusicControls();
 }
 
 function bindMusicControls() {
@@ -1070,7 +1161,7 @@ function renderToast() {
 }
 
 function renderError(error) {
-  app.innerHTML = `
+  setAppHtml(`
     <section class="loading-screen">
       <div class="end-card">
         <p class="eyebrow">Error</p>
@@ -1079,7 +1170,7 @@ function renderError(error) {
         <button class="button" id="retryBoot" style="margin-top: 20px;">다시 시도</button>
       </div>
     </section>
-  `;
+  `);
 
   document.querySelector("#retryBoot").addEventListener("click", restartGame);
 }
@@ -1130,6 +1221,8 @@ bgmAudio.addEventListener("pause", () => {
 bgmAudio.addEventListener("play", () => {
   state.music.isPlaying = true;
 });
+
+window.addEventListener("resize", syncMusicPortalPosition);
 
 function selectUnit(unitId) {
   state.selectedUnitId = unitId;
