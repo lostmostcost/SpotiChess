@@ -4,7 +4,7 @@
       "artist_id": "A001",
       "artist_name": "NewJeans",
       "artist_name_kr": "뉴진스",
-      "profile_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/NewJeans_Hype_Boy_Performance_220804.jpg/800px-NewJeans_Hype_Boy_Performance_220804.jpg",
+      "profile_image": "assets/profile_images/A001_profile.jpg",
       "genre": "K-Pop",
       "tracks": [
         {
@@ -61,7 +61,7 @@
       "artist_id": "A002",
       "artist_name": "IU",
       "artist_name_kr": "아이유",
-      "profile_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg/800px-IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg",
+      "profile_image": "assets/profile_images/A002_profile.jpg",
       "genre": "Ballad/Pop",
       "tracks": [
         {
@@ -118,7 +118,7 @@
       "artist_id": "A003",
       "artist_name": "Silica Gel",
       "artist_name_kr": "실리카겔",
-      "profile_image": "https://upload.wikimedia.org/wikipedia/ko/thumb/9/90/%EC%8B%A4%EB%A6%AC%EC%B9%B4%EA%B2%94_%EB%B0%B4%EB%93%9C_%EB%A1%9C%EA%B3%A0.png/400px-%EC%8B%A4%EB%A6%AC%EC%B9%B4%EA%B2%94_%EB%B0%B4%EB%93%9C_%EB%A1%9C%EA%B3%A0.png",
+      "profile_image": "assets/profile_images/A003_profile.jpg",
       "genre": "Rock",
       "tracks": [
         {
@@ -175,7 +175,7 @@
       "artist_id": "A004",
       "artist_name": "Balming Tiger",
       "artist_name_kr": "바밍타이거",
-      "profile_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Balming_Tiger_2022.jpg/800px-Balming_Tiger_2022.jpg",
+      "profile_image": "assets/profile_images/A004_profile.jpg",
       "genre": "Alternative",
       "tracks": [
         {
@@ -232,7 +232,7 @@
       "artist_id": "A005",
       "artist_name": "Parannoul",
       "artist_name_kr": "파란노을",
-      "profile_image": "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=400",
+      "profile_image": "assets/profile_images/A005_profile.jpg",
       "genre": "Shoegaze",
       "tracks": [
         {
@@ -289,7 +289,7 @@
       "artist_id": "A006",
       "artist_name": "Kim Sawol",
       "artist_name_kr": "김사월",
-      "profile_image": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=400",
+      "profile_image": "assets/profile_images/A006_profile.jpg",
       "genre": "Folk",
       "tracks": [
         {
@@ -346,7 +346,7 @@
       "artist_id": "A007",
       "artist_name": "Dabda",
       "artist_name_kr": "다브다",
-      "profile_image": "https://images.unsplash.com/photo-1526218626217-dc65a29bb444?q=80&w=400",
+      "profile_image": "assets/profile_images/A007_profile.jpg",
       "genre": "Math Rock",
       "tracks": [
         {
@@ -403,7 +403,7 @@
       "artist_id": "A008",
       "artist_name": "Hathaw9y",
       "artist_name_kr": "해와이",
-      "profile_image": "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=400",
+      "profile_image": "assets/profile_images/A008_profile.jpg",
       "genre": "Indie Pop",
       "tracks": [
         {
@@ -460,7 +460,7 @@
       "artist_id": "A009",
       "artist_name": "Sagong",
       "artist_name_kr": "사공",
-      "profile_image": "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?q=80&w=400",
+      "profile_image": "assets/profile_images/A009_profile.jpg",
       "genre": "Lo-fi",
       "tracks": [
         {
@@ -515,58 +515,58 @@
     },
     {
       "artist_id": "A010",
-      "artist_name": "Fancade",
-      "artist_name_kr": "팬케이드",
-      "profile_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400",
+      "artist_name": "Lildou Midoriya",
+      "artist_name_kr": "릴도우 미도리야",
+      "profile_image": "assets/profile_images/A010_profile.jpg",
       "genre": "Electronic",
       "tracks": [
         {
-          "track_name": "Staring",
-          "track_name_kr": "응시",
-          "popularity": 3,
-          "cover_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400"
+          "track_name": "insomnia - Sped Up",
+          "track_name_kr": "insomnia - Sped Up",
+          "popularity": 0,
+          "cover_image": "assets/track_images/A010_insomnia_-_Sped_Up.jpg"
         },
         {
-          "track_name": "Glitch",
-          "track_name_kr": "글리치",
-          "popularity": 2,
-          "cover_image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400"
+          "track_name": "aishitekure! - Sped Up",
+          "track_name_kr": "aishitekure! - Sped Up",
+          "popularity": 0,
+          "cover_image": "assets/track_images/A010_aishitekure__-_Sped_Up.jpg"
         },
         {
-          "track_name": "Neon Dust",
-          "track_name_kr": "네온 먼지",
-          "popularity": 1,
-          "cover_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400"
+          "track_name": "insomnia",
+          "track_name_kr": "insomnia",
+          "popularity": 0,
+          "cover_image": "assets/track_images/A010_insomnia.jpg"
         },
         {
-          "track_name": "Null Pointer",
-          "track_name_kr": "널 포인터",
-          "popularity": 3,
-          "cover_image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400"
+          "track_name": "ageruwa!",
+          "track_name_kr": "ageruwa!",
+          "popularity": 0,
+          "cover_image": "assets/track_images/A010_ageruwa_.jpg"
         },
         {
-          "track_name": "Zero Day",
-          "track_name_kr": "제로 데이",
-          "popularity": 2,
-          "cover_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400"
+          "track_name": "sorry, but!",
+          "track_name_kr": "sorry, but!",
+          "popularity": 0,
+          "cover_image": "assets/track_images/A010_sorry__but_.jpg"
         },
         {
-          "track_name": "Void",
-          "track_name_kr": "보이드",
-          "popularity": 1,
-          "cover_image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400"
+          "track_name": "aishitekure!",
+          "track_name_kr": "aishitekure!",
+          "popularity": 0,
+          "cover_image": "assets/track_images/A010_aishitekure_.jpg"
         },
         {
-          "track_name": "Static",
-          "track_name_kr": "정전기",
-          "popularity": 2,
-          "cover_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400"
+          "track_name": "Kawaii Gang",
+          "track_name_kr": "Kawaii Gang",
+          "popularity": 0,
+          "cover_image": "assets/track_images/A010_Kawaii_Gang.jpg"
         },
         {
-          "track_name": "Reboot",
-          "track_name_kr": "재부팅",
-          "popularity": 1,
-          "cover_image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400"
+          "track_name": "Luv",
+          "track_name_kr": "Luv",
+          "popularity": 0,
+          "cover_image": "assets/track_images/A010_Luv.jpg"
         }
       ]
     }
