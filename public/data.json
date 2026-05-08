@@ -1,0 +1,174 @@
+{
+  "artists": [
+    {
+      "artist_id": "A001",
+      "artist_name": "NewJeans",
+      "artist_name_kr": "뉴진스",
+      "profile_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/NewJeans_Hype_Boy_Performance_220804.jpg/800px-NewJeans_Hype_Boy_Performance_220804.jpg",
+      "genre": "K-Pop",
+      "tracks": [
+        {"track_name": "Ditto", "track_name_kr": "디토", "popularity": 95, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/NewJeans_at_the_2023_Billboard_Music_Awards.jpg/800px-NewJeans_at_the_2023_Billboard_Music_Awards.jpg"},
+        {"track_name": "Hype Boy", "track_name_kr": "하이프 보이", "popularity": 93, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/NewJeans_Hype_Boy_Performance_220804.jpg/800px-NewJeans_Hype_Boy_Performance_220804.jpg"},
+        {"track_name": "OMG", "track_name_kr": "오엠지", "popularity": 92, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/NewJeans_for_Shinhan_Bank_2023.jpg/800px-NewJeans_for_Shinhan_Bank_2023.jpg"},
+        {"track_name": "Super Shy", "track_name_kr": "슈퍼 샤이", "popularity": 94, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/NewJeans_at_the_2023_Billboard_Music_Awards.jpg/800px-NewJeans_at_the_2023_Billboard_Music_Awards.jpg"},
+        {"track_name": "Attention", "track_name_kr": "어텐션", "popularity": 90, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/NewJeans_Hype_Boy_Performance_220804.jpg/800px-NewJeans_Hype_Boy_Performance_220804.jpg"},
+        {"track_name": "ETA", "track_name_kr": "이티에이", "popularity": 89, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/NewJeans_for_Shinhan_Bank_2023.jpg/800px-NewJeans_for_Shinhan_Bank_2023.jpg"},
+        {"track_name": "Cool With You", "track_name_kr": "쿨 위드 유", "popularity": 88, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/NewJeans_at_the_2023_Billboard_Music_Awards.jpg/800px-NewJeans_at_the_2023_Billboard_Music_Awards.jpg"},
+        {"track_name": "How Sweet", "track_name_kr": "하우 스윗", "popularity": 91, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/NewJeans_for_Shinhan_Bank_2023.jpg/800px-NewJeans_for_Shinhan_Bank_2023.jpg"}
+      ]
+    },
+    {
+      "artist_id": "A002",
+      "artist_name": "IU",
+      "artist_name_kr": "아이유",
+      "profile_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg/800px-IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg",
+      "genre": "Ballad/Pop",
+      "tracks": [
+        {"track_name": "Love wins all", "track_name_kr": "러브 윈즈 올", "popularity": 85, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/IU_at_the_2024_Golden_Disc_Awards.jpg/800px-IU_at_the_2024_Golden_Disc_Awards.jpg"},
+        {"track_name": "Eight", "track_name_kr": "에잇", "popularity": 83, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/IU_at_the_2021_Golden_Disc_Awards.jpg/800px-IU_at_the_2021_Golden_Disc_Awards.jpg"},
+        {"track_name": "Through the Night", "track_name_kr": "밤편지", "popularity": 84, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg/800px-IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg"},
+        {"track_name": "Blueming", "track_name_kr": "블루밍", "popularity": 82, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/IU_at_the_2021_Golden_Disc_Awards.jpg/800px-IU_at_the_2021_Golden_Disc_Awards.jpg"},
+        {"track_name": "Lilac", "track_name_kr": "라일락", "popularity": 80, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg/800px-IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg"},
+        {"track_name": "Palette", "track_name_kr": "팔레트", "popularity": 81, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/IU_at_the_2024_Golden_Disc_Awards.jpg/800px-IU_at_the_2024_Golden_Disc_Awards.jpg"},
+        {"track_name": "Celebrity", "track_name_kr": "셀러브리티", "popularity": 79, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/IU_at_the_2021_Golden_Disc_Awards.jpg/800px-IU_at_the_2021_Golden_Disc_Awards.jpg"},
+        {"track_name": "BBIBBI", "track_name_kr": "삐삐", "popularity": 78, "cover_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg/800px-IU_at_%22Broker%22_VIP_Premiere%2C_2_June_2022.jpg"}
+      ]
+    },
+    {
+      "artist_id": "A003",
+      "artist_name": "Silica Gel",
+      "artist_name_kr": "실리카겔",
+      "profile_image": "https://upload.wikimedia.org/wikipedia/ko/thumb/9/90/%EC%8B%A4%EB%A6%AC%EC%B9%B4%EA%B2%94_%EB%B0%B4%EB%93%9C_%EB%A1%9C%EA%B3%A0.png/400px-%EC%8B%A4%EB%A6%AC%EC%B9%B4%EA%B2%94_%EB%B0%B4%EB%93%9C_%EB%A1%9C%EA%B3%A0.png",
+      "genre": "Rock",
+      "tracks": [
+        {"track_name": "NO PAIN", "track_name_kr": "노 페인", "popularity": 55, "cover_image": "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?q=80&w=400"},
+        {"track_name": "Tik Tak Tok", "track_name_kr": "틱택톡", "popularity": 53, "cover_image": "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?q=80&w=400"},
+        {"track_name": "Desert Eagle", "track_name_kr": "데저트 이글", "popularity": 50, "cover_image": "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=400"},
+        {"track_name": "Realize", "track_name_kr": "리얼라이즈", "popularity": 49, "cover_image": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400"},
+        {"track_name": "Kyo181", "track_name_kr": "교181", "popularity": 54, "cover_image": "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?q=80&w=400"},
+        {"track_name": "Apex", "track_name_kr": "에이펙스", "popularity": 51, "cover_image": "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=400"},
+        {"track_name": "Sister", "track_name_kr": "시스터", "popularity": 52, "cover_image": "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?q=80&w=400"},
+        {"track_name": "Ryudejakeiwon", "track_name_kr": "류데자케 이원", "popularity": 48, "cover_image": "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?q=80&w=400"}
+      ]
+    },
+    {
+      "artist_id": "A004",
+      "artist_name": "Balming Tiger",
+      "artist_name_kr": "바밍타이거",
+      "profile_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Balming_Tiger_2022.jpg/800px-Balming_Tiger_2022.jpg",
+      "genre": "Alternative",
+      "tracks": [
+        {"track_name": "SEXY NUKIM", "track_name_kr": "섹시느낌", "popularity": 50, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"},
+        {"track_name": "Kolo Kolo", "track_name_kr": "콜로 콜로", "popularity": 48, "cover_image": "https://images.unsplash.com/photo-1514525253361-bee8718a300c?q=80&w=400"},
+        {"track_name": "Armadillo", "track_name_kr": "아르마딜로", "popularity": 45, "cover_image": "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=400"},
+        {"track_name": "Trust Yourself", "track_name_kr": "트러스트 유어셀프", "popularity": 47, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"},
+        {"track_name": "SOS", "track_name_kr": "에스오에스", "popularity": 49, "cover_image": "https://images.unsplash.com/photo-1514525253361-bee8718a300c?q=80&w=400"},
+        {"track_name": "Just Fun!", "track_name_kr": "저스트 펀", "popularity": 44, "cover_image": "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=400"},
+        {"track_name": "LOOP?", "track_name_kr": "루프?", "popularity": 46, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"},
+        {"track_name": "Buriburi", "track_name_kr": "부리부리", "popularity": 43, "cover_image": "https://images.unsplash.com/photo-1514525253361-bee8718a300c?q=80&w=400"}
+      ]
+    },
+    {
+      "artist_id": "A005",
+      "artist_name": "Parannoul",
+      "artist_name_kr": "파란노을",
+      "profile_image": "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=400",
+      "genre": "Shoegaze",
+      "tracks": [
+        {"track_name": "Beautiful World", "track_name_kr": "아름다운 세상", "popularity": 40, "cover_image": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=400"},
+        {"track_name": "Analog Sentimentalism", "track_name_kr": "아날로그 센티멘탈리즘", "popularity": 38, "cover_image": "https://images.unsplash.com/photo-1557682250-33bd709cbe85?q=80&w=400"},
+        {"track_name": "White Ceiling", "track_name_kr": "흰 천장", "popularity": 39, "cover_image": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=400"},
+        {"track_name": "Polaris", "track_name_kr": "북극성", "popularity": 36, "cover_image": "https://images.unsplash.com/photo-1557682250-33bd709cbe85?q=80&w=400"},
+        {"track_name": "Into the Endless Night", "track_name_kr": "끝없는 밤으로", "popularity": 37, "cover_image": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=400"},
+        {"track_name": "We Shine at Night", "track_name_kr": "우리는 밤에 빛난다", "popularity": 35, "cover_image": "https://images.unsplash.com/photo-1557682250-33bd709cbe85?q=80&w=400"},
+        {"track_name": "Excuse", "track_name_kr": "변명", "popularity": 34, "cover_image": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=400"},
+        {"track_name": "Imagination", "track_name_kr": "상상", "popularity": 38, "cover_image": "https://images.unsplash.com/photo-1557682250-33bd709cbe85?q=80&w=400"}
+      ]
+    },
+    {
+      "artist_id": "A006",
+      "artist_name": "Kim Sawol",
+      "artist_name_kr": "김사월",
+      "profile_image": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=400",
+      "genre": "Folk",
+      "tracks": [
+        {"track_name": "Suzanne", "track_name_kr": "수잔", "popularity": 30, "cover_image": "https://images.unsplash.com/photo-1446057032654-9d8885b7518a?q=80&w=400"},
+        {"track_name": "Bedside", "track_name_kr": "머릿맡", "popularity": 28, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"},
+        {"track_name": "Someone", "track_name_kr": "누군가", "popularity": 29, "cover_image": "https://images.unsplash.com/photo-1446057032654-9d8885b7518a?q=80&w=400"},
+        {"track_name": "Young Girls", "track_name_kr": "머리맡", "popularity": 27, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"},
+        {"track_name": "Dreamer", "track_name_kr": "몽상가", "popularity": 26, "cover_image": "https://images.unsplash.com/photo-1446057032654-9d8885b7518a?q=80&w=400"},
+        {"track_name": "Phobia", "track_name_kr": "공포증", "popularity": 25, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"},
+        {"track_name": "Odor", "track_name_kr": "냄새", "popularity": 24, "cover_image": "https://images.unsplash.com/photo-1446057032654-9d8885b7518a?q=80&w=400"},
+        {"track_name": "Telephone", "track_name_kr": "전화", "popularity": 28, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"}
+      ]
+    },
+    {
+      "artist_id": "A007",
+      "artist_name": "Dabda",
+      "artist_name_kr": "다브다",
+      "profile_image": "https://images.unsplash.com/photo-1526218626217-dc65a29bb444?q=80&w=400",
+      "genre": "Math Rock",
+      "tracks": [
+        {"track_name": "Journey", "track_name_kr": "여정", "popularity": 20, "cover_image": "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=400"},
+        {"track_name": "Lightly!", "track_name_kr": "가볍게!", "popularity": 18, "cover_image": "https://images.unsplash.com/photo-1526218626217-dc65a29bb444?q=80&w=400"},
+        {"track_name": "Polydream", "track_name_kr": "폴리드림", "popularity": 19, "cover_image": "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=400"},
+        {"track_name": "Jungle Gym", "track_name_kr": "정글짐", "popularity": 17, "cover_image": "https://images.unsplash.com/photo-1526218626217-dc65a29bb444?q=80&w=400"},
+        {"track_name": "Playing with Fire", "track_name_kr": "불장난", "popularity": 16, "cover_image": "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=400"},
+        {"track_name": "Sura", "track_name_kr": "수라", "popularity": 15, "cover_image": "https://images.unsplash.com/photo-1526218626217-dc65a29bb444?q=80&w=400"},
+        {"track_name": "Diving", "track_name_kr": "다이빙", "popularity": 18, "cover_image": "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=400"},
+        {"track_name": "Pierrot", "track_name_kr": "삐에로", "popularity": 14, "cover_image": "https://images.unsplash.com/photo-1526218626217-dc65a29bb444?q=80&w=400"}
+      ]
+    },
+    {
+      "artist_id": "A008",
+      "artist_name": "Hathaw9y",
+      "artist_name_kr": "해와이",
+      "profile_image": "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=400",
+      "genre": "Indie Pop",
+      "tracks": [
+        {"track_name": "Boy", "track_name_kr": "소년", "popularity": 15, "cover_image": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=400"},
+        {"track_name": "Love", "track_name_kr": "사랑", "popularity": 14, "cover_image": "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=400"},
+        {"track_name": "Hay", "track_name_kr": "헤이", "popularity": 12, "cover_image": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=400"},
+        {"track_name": "World Tour", "track_name_kr": "월드 투어", "popularity": 11, "cover_image": "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=400"},
+        {"track_name": "Falling", "track_name_kr": "낙하", "popularity": 10, "cover_image": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=400"},
+        {"track_name": "Drop", "track_name_kr": "드롭", "popularity": 13, "cover_image": "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=400"},
+        {"track_name": "Sweet", "track_name_kr": "달콤한", "popularity": 11, "cover_image": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=400"},
+        {"track_name": "Play", "track_name_kr": "놀이", "popularity": 12, "cover_image": "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=400"}
+      ]
+    },
+    {
+      "artist_id": "A009",
+      "artist_name": "Sagong",
+      "artist_name_kr": "사공",
+      "profile_image": "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?q=80&w=400",
+      "genre": "Lo-fi",
+      "tracks": [
+        {"track_name": "Afield", "track_name_kr": "멀리", "popularity": 10, "cover_image": "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?q=80&w=400"},
+        {"track_name": "Sad Love", "track_name_kr": "슬픈 사랑", "popularity": 8, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"},
+        {"track_name": "Optimist", "track_name_kr": "낙천주의자", "popularity": 9, "cover_image": "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?q=80&w=400"},
+        {"track_name": "Telescope", "track_name_kr": "망원경", "popularity": 7, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"},
+        {"track_name": "Hide and Seek", "track_name_kr": "숨바꼭질", "popularity": 6, "cover_image": "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?q=80&w=400"},
+        {"track_name": "Walk", "track_name_kr": "걷기", "popularity": 8, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"},
+        {"track_name": "Lazy", "track_name_kr": "나른한", "popularity": 5, "cover_image": "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?q=80&w=400"},
+        {"track_name": "Dream", "track_name_kr": "꿈", "popularity": 7, "cover_image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=400"}
+      ]
+    },
+    {
+      "artist_id": "A010",
+      "artist_name": "Fancade",
+      "artist_name_kr": "팬케이드",
+      "profile_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400",
+      "genre": "Electronic",
+      "tracks": [
+        {"track_name": "Staring", "track_name_kr": "응시", "popularity": 3, "cover_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400"},
+        {"track_name": "Glitch", "track_name_kr": "글리치", "popularity": 2, "cover_image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400"},
+        {"track_name": "Neon Dust", "track_name_kr": "네온 먼지", "popularity": 1, "cover_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400"},
+        {"track_name": "Null Pointer", "track_name_kr": "널 포인터", "popularity": 3, "cover_image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400"},
+        {"track_name": "Zero Day", "track_name_kr": "제로 데이", "popularity": 2, "cover_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400"},
+        {"track_name": "Void", "track_name_kr": "보이드", "popularity": 1, "cover_image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400"},
+        {"track_name": "Static", "track_name_kr": "정전기", "popularity": 2, "cover_image": "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=400"},
+        {"track_name": "Reboot", "track_name_kr": "재부팅", "popularity": 1, "cover_image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400"}
+      ]
+    }
+  ]
+}
