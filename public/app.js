@@ -302,9 +302,10 @@ function renderStartScreen() {
       <div class="start-shell">
         <div class="hero">
           <p class="eyebrow">Spotify Chess</p>
-          <h1>Less Popular,<br />More Powerful</h1>
+          <h1>Spotify Chess</h1>
           <p class="hero-copy">
-            백엔드 세션이 생성되었습니다. 페르소나 아티스트를 선택하면 이후 상점과 전투는 FastAPI 서버 상태를 기준으로 진행됩니다.
+            Popularity는 차트의 숫자일 뿐, 음악의 강함을 증명하지 않습니다.
+            덜 알려진 트랙이 더 큰 힘을 발휘하는 역전의 무대에 오르세요.
           </p>
         </div>
         <div class="artist-grid">
@@ -321,7 +322,6 @@ function renderStartScreen() {
 }
 
 function renderArtistCard(artist) {
-  const sample = artist.sample_popularity?.join(", ") ?? "-";
   const name = displayArtistName(artist);
 
   return `
@@ -334,7 +334,6 @@ function renderArtistCard(artist) {
           <span>${escapeHtml(artist.genre ?? artist.artist_name)}</span>
           <span>Avg POP ${escapeHtml(artist.avg_popularity)}</span>
         </div>
-        <p class="card-subtitle">Sample POP ${escapeHtml(sample)}</p>
       </div>
     </button>
   `;
