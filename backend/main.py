@@ -97,17 +97,40 @@ def refresh_shop(state: dict) -> None:
     state["shop"] = [make_track(t, state["artist_id"], i) for i, t in enumerate(sampled)]
 
 
-def spawn_enemies(round_no: int) -> list[dict]:
-    """라운드 비례 적 생성. 인기도 높은 차트 괴물(=낮은 공격력, 높은 체력)."""
+def display_artist_name(artist: dict) -> str:
+    return artist.get("artist_name_kr") or artist["artist_name"]
+
+
+def display_track_name(unit: dict) -> str:
+    return unit.get("track_name_kr") or unit["track_name"]
+
+
+def spawn_enemies(player_artist_id: str, round_no: int) -> list[dict]:
+    """플레이어가 선택하지 않은 다른 아티스트의 곡을 적 유닛으로 생성."""
     enemy_count = min(1 + round_no // 2, 6)
+    enemy_artists = [a for a in GAME_DATA["artists"] if a["artist_id"] != player_artist_id]
+
+    if not enemy_artists:
+        raise HTTPException(400, detail={"error": "NO_ENEMY_ARTISTS"})
+
+    enemy_artist = random.choice(enemy_artists)
+    sampled_tracks = random.sample(
+        enemy_artist["tracks"],
+        min(enemy_count, len(enemy_artist["tracks"])),
+    )
     enemies = []
-    for i in range(enemy_count):
-        pop = min(60 + round_no * 3, 95)
+    for i, track_data in enumerate(sampled_tracks):
+        pop = track_data["popularity"]
         hp_bonus = round_no * 15
         max_hp = BASE_HP + hp_bonus
         enemies.append({
-            "unit_id": f"E{round_no}_{i}",
-            "track_name": f"Chart Monster #{i+1} (R{round_no})",
+            "unit_id": f"E{round_no}_{enemy_artist['artist_id']}_{i}",
+            "artist_id": enemy_artist["artist_id"],
+            "artist_name": enemy_artist["artist_name"],
+            "artist_name_kr": enemy_artist.get("artist_name_kr"),
+            "track_name": track_data["track_name"],
+            "track_name_kr": track_data.get("track_name_kr"),
+            "cover_image": track_data.get("cover_image"),
             "popularity": pop,
             "hp": max_hp,
             "max_hp": max_hp,
@@ -124,7 +147,8 @@ def heal_board(state: dict) -> None:
 def simulate_battle(allies: list[dict], enemies: list[dict]) -> tuple[bool, list[str]]:
     """라운드로빈 턴제 전투. (승리여부, 로그) 반환."""
     log: list[str] = []
-    log.append(f"⚔️ 전투 개시! 아군 {len(allies)}기 vs 적 {len(enemies)}기")
+    enemy_artist = display_artist_name(enemies[0]) if enemies else "알 수 없는 아티스트"
+    log.append(f"⚔️ 전투 개시! 아군 {len(allies)}기 vs {enemy_artist}의 곡 {len(enemies)}기")
 
     a_idx = e_idx = 0
     for turn in range(1, MAX_BATTLE_TURNS + 1):
@@ -141,11 +165,11 @@ def simulate_battle(allies: list[dict], enemies: list[dict]) -> tuple[bool, list
                     dmg = int(attacker["atk"])
                     target["hp"] -= dmg
                     log.append(
-                        f"[T{turn}] 인기도 {attacker['popularity']}의 '{attacker['track_name']}' "
+                        f"[T{turn}] 인기도 {attacker['popularity']}의 '{display_track_name(attacker)}' "
                         f"→ {dmg} 데미지!"
                     )
                     if target["hp"] <= 0:
-                        log.append(f"  💥 '{target['track_name']}' 격파!")
+                        log.append(f"  💥 {display_artist_name(target)}의 '{display_track_name(target)}' 격파!")
                 break
 
         if not any(e["hp"] > 0 for e in enemies):
@@ -161,11 +185,12 @@ def simulate_battle(allies: list[dict], enemies: list[dict]) -> tuple[bool, list
                     dmg = int(attacker["atk"])
                     target["hp"] -= dmg
                     log.append(
-                        f"[T{turn}] 적 '{attacker['track_name']}'(인기도 {attacker['popularity']}) "
+                        f"[T{turn}] 적 {display_artist_name(attacker)}의 '{display_track_name(attacker)}'"
+                        f"(인기도 {attacker['popularity']}) "
                         f"→ {dmg} 반격!"
                     )
                     if target["hp"] <= 0:
-                        log.append(f"  ☠️ 아군 '{target['track_name']}' 쓰러짐!")
+                        log.append(f"  ☠️ 아군 '{display_track_name(target)}' 쓰러짐!")
                 break
 
     win = all(u["hp"] <= 0 for u in enemies) and any(u["hp"] > 0 for u in allies)
@@ -351,7 +376,7 @@ def start_combat(sid: str):
 
     # 보드 유닛 복사 (전투 중 HP 변동이 영구 반영되지 않도록)
     allies = [dict(u) for u in state["board"]]
-    enemies = spawn_enemies(state["round"])
+    enemies = spawn_enemies(state["artist_id"], state["round"])
     win, log = simulate_battle(allies, enemies)
 
     state["phase"] = "result"
