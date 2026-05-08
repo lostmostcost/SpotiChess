@@ -9,6 +9,8 @@ const state = {
   combatLogs: [],
   combatDone: false,
   combatMatchup: null,
+  combatAllyUnits: [],
+  combatEnemyUnits: [],
   battleSpeed: 1,
   toast: ""
 };
@@ -18,7 +20,7 @@ const GAME_CONFIG = {
   sellRefund: 3,
   rerollCost: 1,
   buyExpCost: 4,
-  maxLevel: 6,
+  maxLevel: 3,
   maxRound: 10
 };
 
@@ -215,40 +217,133 @@ async function startCombat() {
   }
 
   state.phase = "combat";
-  state.combatLogs = ["스테이지 조명이 어두워지고, 상대 아티스트의 트랙이 입장합니다."];
+  state.combatLogs = [];
   state.combatDone = false;
+  state.combatAllyUnits = state.game.board.map((u) => ({ ...u }));
+  state.combatEnemyUnits = [];
   render();
 
   try {
     const game = await api(`/game/${state.sessionId}/start_combat`, { method: "POST" });
-    state.combatMatchup = {
-      player: state.game,
-      enemy: game.last_enemy_artist
-    };
+    state.combatMatchup = { player: state.game, enemy: game.last_enemy_artist };
+    state.combatEnemyUnits = (game.last_enemy_units_initial ?? []).map((u) => ({ ...u }));
     render();
-    await playCombatLogs(game.last_battle_log ?? []);
+
+    await playCombatEvents(game.last_battle_events ?? [], state.combatAllyUnits, state.combatEnemyUnits);
+
     state.combatDone = true;
     render();
-    await sleep(combatDelay(1100));
+    await sleep(combatDelay(900));
     updateGame(game);
   } catch (error) {
     state.phase = "shop";
     state.combatLogs = [];
     state.combatDone = false;
     state.combatMatchup = null;
+    state.combatAllyUnits = [];
+    state.combatEnemyUnits = [];
     showToast(error.message);
   }
 }
 
-async function playCombatLogs(logs) {
-  const dramaticLogs = logs.length > 0 ? logs : ["전투 로그가 비어 있습니다."];
-  await sleep(combatDelay(800));
+async function playCombatEvents(events, allyUnits, enemyUnits) {
+  const hpMap = {};
+  [...allyUnits, ...enemyUnits].forEach((u) => {
+    hpMap[u.unit_id] = { hp: u.hp, maxHp: u.max_hp };
+  });
 
-  for (const log of dramaticLogs) {
-    state.combatLogs = [...state.combatLogs, log].slice(-9);
-    render();
-    await sleep(log.includes("승리") || log.includes("패배") ? combatDelay(1300) : combatDelay(850));
+  await sleep(combatDelay(600));
+
+  for (const ev of events) {
+    if (ev.type !== "attack") continue;
+
+    const atkEl = document.querySelector(`[data-combat-unit="${ev.attacker_id}"]`);
+    const tgtEl = document.querySelector(`[data-combat-unit="${ev.target_id}"]`);
+    if (!atkEl || !tgtEl) {
+      await sleep(combatDelay(120));
+      continue;
+    }
+
+    const atkRect = atkEl.getBoundingClientRect();
+    const tgtRect = tgtEl.getBoundingClientRect();
+    const dx = ((tgtRect.left + tgtRect.width / 2) - (atkRect.left + atkRect.width / 2)) * 0.7;
+    const dy = ((tgtRect.top + tgtRect.height / 2) - (atkRect.top + atkRect.height / 2)) * 0.7;
+
+    // 1) 공격자 돌진 (앞으로 뒤로)
+    atkEl.classList.add("is-attacker");
+    const dashAnim = atkEl.animate(
+      [
+        { transform: "translate(0,0) scale(1)", filter: "brightness(1)", offset: 0 },
+        { transform: `translate(${dx * 0.2}px, ${dy * 0.2}px) scale(1.05)`, filter: "brightness(1.2)", offset: 0.2 },
+        { transform: `translate(${dx}px, ${dy}px) scale(1.18)`, filter: "brightness(1.7)", offset: 0.5 },
+        { transform: `translate(${dx * 0.2}px, ${dy * 0.2}px) scale(1.05)`, filter: "brightness(1.1)", offset: 0.75 },
+        { transform: "translate(0,0) scale(1)", filter: "brightness(1)", offset: 1 }
+      ],
+      { duration: combatDelay(560), easing: "cubic-bezier(.4,1.6,.5,1)" }
+    );
+
+    // 2) 충돌 시점에 타겟 흔들림 + 데미지 숫자 + HP 갱신
+    await sleep(combatDelay(260));
+
+    tgtEl.animate(
+      [
+        { transform: "translate(0,0) rotate(0)" },
+        { transform: "translate(-9px,3px) rotate(-3deg)" },
+        { transform: "translate(8px,-4px) rotate(3deg)" },
+        { transform: "translate(-5px,5px) rotate(-2deg)" },
+        { transform: "translate(4px,-2px) rotate(1deg)" },
+        { transform: "translate(0,0) rotate(0)" }
+      ],
+      { duration: combatDelay(420), easing: "ease-out" }
+    );
+
+    tgtEl.classList.add("is-impacted");
+    setTimeout(() => tgtEl.classList.remove("is-impacted"), combatDelay(420));
+
+    floatDamage(tgtEl, ev.dmg);
+    spawnImpactBurst(tgtEl);
+
+    hpMap[ev.target_id].hp = ev.target_hp_after;
+    updateHpBar(tgtEl, hpMap[ev.target_id].hp, hpMap[ev.target_id].maxHp);
+
+    await dashAnim.finished;
+    atkEl.classList.remove("is-attacker");
+
+    if (ev.target_hp_after <= 0 && !tgtEl.classList.contains("dying")) {
+      tgtEl.classList.add("dying");
+      await sleep(combatDelay(280));
+    } else {
+      await sleep(combatDelay(120));
+    }
   }
+}
+
+function floatDamage(el, dmg) {
+  const node = document.createElement("div");
+  node.className = "damage-float";
+  node.textContent = `-${dmg}`;
+  el.appendChild(node);
+  node.addEventListener("animationend", () => node.remove(), { once: true });
+}
+
+function spawnImpactBurst(el) {
+  const burst = document.createElement("div");
+  burst.className = "impact-burst";
+  el.appendChild(burst);
+  burst.addEventListener("animationend", () => burst.remove(), { once: true });
+}
+
+function updateHpBar(el, hp, maxHp) {
+  const fill = el.querySelector(".hp-fill");
+  const text = el.querySelector(".hp-text");
+  if (!fill) return;
+  const safeHp = Math.max(0, hp);
+  const pct = Math.max(0, Math.min(100, (safeHp / maxHp) * 100));
+  fill.style.width = `${pct}%`;
+  if (pct <= 25) fill.style.backgroundColor = "#ff4d4f";
+  else if (pct <= 50) fill.style.backgroundColor = "#ff8c00";
+  else fill.style.backgroundColor = "";
+  if (text) text.textContent = `${Math.ceil(safeHp)}/${maxHp}`;
 }
 
 async function nextRound() {
@@ -268,6 +363,8 @@ async function restartGame() {
   state.combatLogs = [];
   state.combatDone = false;
   state.combatMatchup = null;
+  state.combatAllyUnits = [];
+  state.combatEnemyUnits = [];
   await boot();
 }
 
@@ -285,6 +382,8 @@ function updateGame(game) {
   state.combatLogs = [];
   state.combatDone = false;
   state.combatMatchup = null;
+  state.combatAllyUnits = [];
+  state.combatEnemyUnits = [];
   render();
 }
 
@@ -529,15 +628,8 @@ function renderCombatOverlay() {
             ${state.combatDone ? "결과를 정산하는 중입니다." : "상대 아티스트의 곡과 턴마다 공격을 주고받습니다."}
           </p>
           ${renderCombatMatchup()}
+          ${renderCombatArena()}
           ${renderBattleSpeedControl("combatSpeed")}
-          <div class="combat-pulse" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <ul class="log-list combat-log" aria-live="polite">
-            ${state.combatLogs.map((log) => `<li>${renderHighlightedLog(log)}</li>`).join("")}
-          </ul>
         </div>
       </div>
       ${renderToast()}
@@ -545,6 +637,52 @@ function renderCombatOverlay() {
   `;
 
   bindBattleSpeedControl("#combatSpeed");
+}
+
+function renderCombatArena() {
+  const hasUnits = state.combatAllyUnits.length || state.combatEnemyUnits.length;
+  if (!hasUnits) {
+    return `
+      <div class="combat-arena pending">
+        <div class="combat-pulse" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <p class="muted">상대 트랙이 입장하고 있습니다…</p>
+      </div>
+    `;
+  }
+
+  const enemyRow = state.combatEnemyUnits.length
+    ? state.combatEnemyUnits.map((u) => renderCombatUnit(u, "enemy")).join("")
+    : `<span class="combat-row-empty">대기 중…</span>`;
+
+  return `
+    <div class="combat-arena">
+      <div class="combat-row enemy-row">${enemyRow}</div>
+      <div class="arena-divider"><span>BATTLE</span></div>
+      <div class="combat-row ally-row">
+        ${state.combatAllyUnits.map((u) => renderCombatUnit(u, "ally")).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderCombatUnit(unit, side) {
+  const name = displayTrackName(unit);
+  const hpPct = Math.max(0, Math.min(100, (unit.hp / unit.max_hp) * 100));
+  return `
+    <div class="combat-unit ${side}" data-combat-unit="${escapeHtml(unit.unit_id)}">
+      <div class="combat-unit-art">
+        ${imageTag(trackImage(unit), name, "combat-unit-img")}
+        <span class="combat-unit-atk-badge">${formatAtk(unit.atk)}</span>
+      </div>
+      <div class="combat-unit-name">${escapeHtml(name)}</div>
+      <div class="hp-bar">
+        <div class="hp-fill" style="width:${hpPct}%"></div>
+        <span class="hp-text">${Math.ceil(unit.hp)}/${unit.max_hp}</span>
+      </div>
+    </div>
+  `;
 }
 
 function renderCombatMatchup() {
@@ -640,8 +778,7 @@ function bindGameEvents() {
 
   document.querySelectorAll("[data-unit-id]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.selectedUnitId = button.dataset.unitId;
-      render();
+      selectUnitAndPlay(button.dataset.unitId);
     });
   });
 
@@ -723,4 +860,185 @@ function render() {
   }
 }
 
+// ==================== 턴테이블 (Spotify 미리듣기) ====================
+const turntable = {
+  el: null,
+  audio: null,
+  currentKey: null,
+  info: null,
+  loading: false,
+  failed: false,
+  failMessage: "",
+
+  init() {
+    const root = document.createElement("div");
+    root.id = "turntable";
+    root.className = "turntable empty";
+    document.body.appendChild(root);
+    this.el = root;
+
+    const audio = document.createElement("audio");
+    audio.preload = "metadata";
+    audio.volume = 0.7;
+    document.body.appendChild(audio);
+    this.audio = audio;
+
+    audio.addEventListener("timeupdate", () => this.render());
+    audio.addEventListener("ended", () => this.render());
+    audio.addEventListener("loadedmetadata", () => this.render());
+    audio.addEventListener("play", () => this.render());
+    audio.addEventListener("pause", () => this.render());
+
+    this.render();
+  },
+
+  async loadTrack(artist, trackName) {
+    if (!artist || !trackName) return;
+    const key = `${artist}|${trackName}`;
+    if (this.currentKey === key) return;
+    this.currentKey = key;
+    this.info = null;
+    this.failed = false;
+    this.loading = true;
+    this.audio.pause();
+    this.audio.removeAttribute("src");
+    this.render();
+
+    try {
+      const params = new URLSearchParams({ artist, track: trackName });
+      const data = await api(`/spotify/track?${params.toString()}`);
+      if (this.currentKey !== key) return;
+      this.loading = false;
+      if (data.found) {
+        this.info = data;
+        if (data.preview_url) {
+          this.audio.src = data.preview_url;
+          this.audio.currentTime = 0;
+          try { await this.audio.play(); } catch (_) { /* autoplay blocked — user can click play */ }
+        }
+      }
+    } catch (error) {
+      if (this.currentKey !== key) return;
+      this.loading = false;
+      this.failed = true;
+      this.failMessage = error.message || "Spotify 연동 실패";
+    }
+    this.render();
+  },
+
+  togglePlay() {
+    if (!this.info?.preview_url) return;
+    if (this.audio.paused) this.audio.play().catch(() => {});
+    else this.audio.pause();
+  },
+
+  seek(pct) {
+    if (!isFinite(this.audio.duration) || this.audio.duration <= 0) return;
+    this.audio.currentTime = (pct / 100) * this.audio.duration;
+  },
+
+  setVolume(v) {
+    this.audio.volume = Math.max(0, Math.min(1, Number(v) / 100));
+  },
+
+  formatTime(sec) {
+    if (!isFinite(sec) || sec < 0) return "0:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  },
+
+  render() {
+    if (!this.el) return;
+    const playing = !this.audio.paused && !this.audio.ended && this.audio.src;
+    const duration = isFinite(this.audio.duration) ? this.audio.duration : 0;
+    const current = this.audio.currentTime || 0;
+    const pct = duration > 0 ? (current / duration) * 100 : 0;
+    const volPct = Math.round(this.audio.volume * 100);
+
+    let coverHtml = "";
+    let title = "기물을 선택하세요";
+    let subtitle = "";
+    let eyebrow = "TURNTABLE";
+    let stateClass = "empty";
+    let noPreview = false;
+
+    if (this.loading) {
+      stateClass = "loading";
+      title = "트랙 검색 중…";
+    } else if (this.failed) {
+      stateClass = "failed";
+      eyebrow = "SPOTIFY";
+      title = "연결 실패";
+      subtitle = this.failMessage;
+    } else if (this.info) {
+      noPreview = !this.info.preview_url;
+      stateClass = playing ? "playing" : (noPreview ? "no-preview" : "paused");
+      eyebrow = noPreview ? "미리듣기 없음" : (playing ? "▶ NOW PLAYING" : "❚❚ PAUSED");
+      title = this.info.name || "Unknown";
+      subtitle = this.info.artist || "";
+      if (this.info.image) {
+        coverHtml = `<img class="tt-cover" src="${escapeHtml(this.info.image)}" alt="" />`;
+      }
+    }
+
+    this.el.className = `turntable ${stateClass}`;
+    this.el.innerHTML = `
+      <div class="tt-vinyl" data-tt-vinyl>
+        <div class="tt-disc">
+          ${coverHtml}
+          <span class="tt-spindle"></span>
+        </div>
+        <div class="tt-tonearm"></div>
+      </div>
+      <div class="tt-body">
+        <span class="tt-eyebrow">${escapeHtml(eyebrow)}</span>
+        <span class="tt-title">${escapeHtml(title)}</span>
+        ${subtitle ? `<span class="tt-artist">${escapeHtml(subtitle)}</span>` : ""}
+        ${
+          this.info && !noPreview
+            ? `
+              <div class="tt-progress" data-tt-seek>
+                <div class="tt-progress-fill" style="width:${pct}%"></div>
+              </div>
+              <div class="tt-time">${this.formatTime(current)} / ${this.formatTime(duration)}</div>
+            `
+            : ""
+        }
+        <div class="tt-controls">
+          <button class="tt-btn" data-tt-toggle ${this.info && !noPreview ? "" : "disabled"} aria-label="재생/일시정지">
+            ${playing ? "⏸" : "▶"}
+          </button>
+          <input type="range" class="tt-volume" min="0" max="100" value="${volPct}" data-tt-volume aria-label="볼륨" />
+          ${
+            this.info?.external_url
+              ? `<a class="tt-spotify-link" href="${escapeHtml(this.info.external_url)}" target="_blank" rel="noopener">Spotify ↗</a>`
+              : ""
+          }
+        </div>
+      </div>
+    `;
+
+    this.el.querySelector("[data-tt-toggle]")?.addEventListener("click", () => this.togglePlay());
+    this.el.querySelector("[data-tt-volume]")?.addEventListener("input", (e) => this.setVolume(e.target.value));
+    this.el.querySelector("[data-tt-seek]")?.addEventListener("click", (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      this.seek((x / rect.width) * 100);
+    });
+  },
+};
+
+function selectUnitAndPlay(unitId) {
+  state.selectedUnitId = unitId;
+  const unit = state.game?.board?.find((u) => u.unit_id === unitId);
+  if (unit) {
+    const artist = state.game?.artist_name || state.game?.artist_name_kr || "";
+    const trackName = unit.track_name || unit.track_name_kr || "";
+    turntable.loadTrack(artist, trackName);
+  }
+  render();
+}
+
+turntable.init();
 boot();

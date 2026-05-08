@@ -3,8 +3,14 @@ Spotify Chess - Backend MVP
 역밸런싱 로그라이크: 유명할수록 약하고, 무명일수록 강하다.
 """
 import json
+import os
 import random
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 import uuid
+from base64 import b64encode
 from pathlib import Path
 from typing import Optional
 
@@ -13,6 +19,30 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+
+# ==================== .env 로더 (Secrets/.env) ====================
+def _load_env_file() -> None:
+    env_path = Path(__file__).parent.parent / "Secrets" / ".env"
+    if not env_path.exists():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_env_file()
+SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
+SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET")
+
+# Spotipy 스타일 access_token 캐시 파일 위치 후보 (.cache, Secrets/.cache)
+SPOTIFY_TOKEN_CACHE_PATHS = [
+    Path(__file__).parent.parent / ".cache",
+    Path(__file__).parent.parent / "Secrets" / ".cache",
+]
 
 # ==================== 상수 ====================
 MAX_ROUND = 10
@@ -34,8 +64,8 @@ BASE_HP = 100
 BASE_ATK = 10
 
 # 인덱스 = 현재 레벨, 값 = 다음 레벨로 가기 위해 필요한 EXP
-LEVEL_THRESHOLDS = [0, 2, 8, 20, 40, 72]
-MAX_LEVEL = 6
+LEVEL_THRESHOLDS = [0, 2, 8]
+MAX_LEVEL = 3
 
 MAX_BATTLE_TURNS = 30
 
@@ -158,9 +188,10 @@ def heal_board(state: dict) -> None:
         u["hp"] = u["max_hp"]
 
 
-def simulate_battle(allies: list[dict], enemies: list[dict]) -> tuple[bool, list[str]]:
-    """라운드로빈 턴제 전투. (승리여부, 로그) 반환."""
+def simulate_battle(allies: list[dict], enemies: list[dict]) -> tuple[bool, list[str], list[dict]]:
+    """라운드로빈 턴제 전투. (승리여부, 로그, 이벤트목록) 반환."""
     log: list[str] = []
+    events: list[dict] = []
     enemy_artist = display_artist_name(enemies[0]) if enemies else "알 수 없는 아티스트"
     log.append(f"⚔️ 전투 개시! 아군 {len(allies)}기 vs {enemy_artist}의 곡 {len(enemies)}기")
 
@@ -178,6 +209,14 @@ def simulate_battle(allies: list[dict], enemies: list[dict]) -> tuple[bool, list
                 if target:
                     dmg = int(attacker["atk"])
                     target["hp"] -= dmg
+                    events.append({
+                        "type": "attack",
+                        "attacker_id": attacker["unit_id"],
+                        "attacker_side": "ally",
+                        "target_id": target["unit_id"],
+                        "dmg": dmg,
+                        "target_hp_after": target["hp"],
+                    })
                     log.append(
                         f"[T{turn}] 인기도 {attacker['popularity']}의 '{display_track_name(attacker)}' "
                         f"→ {dmg} 데미지!"
@@ -198,6 +237,14 @@ def simulate_battle(allies: list[dict], enemies: list[dict]) -> tuple[bool, list
                 if target:
                     dmg = int(attacker["atk"])
                     target["hp"] -= dmg
+                    events.append({
+                        "type": "attack",
+                        "attacker_id": attacker["unit_id"],
+                        "attacker_side": "enemy",
+                        "target_id": target["unit_id"],
+                        "dmg": dmg,
+                        "target_hp_after": target["hp"],
+                    })
                     log.append(
                         f"[T{turn}] 적 {display_artist_name(attacker)}의 '{display_track_name(attacker)}'"
                         f"(인기도 {attacker['popularity']}) "
@@ -209,7 +256,7 @@ def simulate_battle(allies: list[dict], enemies: list[dict]) -> tuple[bool, list
 
     win = all(u["hp"] <= 0 for u in enemies) and any(u["hp"] > 0 for u in allies)
     log.append("🎉 승리!" if win else "💀 패배...")
-    return win, log
+    return win, log, events
 
 
 # ==================== 세션 ====================
@@ -274,6 +321,8 @@ def new_game():
         "shop": [],
         "board": [],
         "last_battle_log": None,
+        "last_battle_events": None,
+        "last_enemy_units_initial": None,
         "last_result": None,
         "last_enemy_artist": None,
         "_candidate_ids": [a["artist_id"] for a in candidates],
@@ -392,10 +441,13 @@ def start_combat(sid: str):
     # 보드 유닛 복사 (전투 중 HP 변동이 영구 반영되지 않도록)
     allies = [dict(u) for u in state["board"]]
     enemies = spawn_enemies(state["artist_id"], state["round"])
-    win, log = simulate_battle(allies, enemies)
+    enemy_units_snapshot = [dict(e) for e in enemies]
+    win, log, events = simulate_battle(allies, enemies)
 
     state["phase"] = "result"
     state["last_battle_log"] = log
+    state["last_battle_events"] = events
+    state["last_enemy_units_initial"] = enemy_units_snapshot
     state["last_result"] = "win" if win else "loss"
     state["last_enemy_artist"] = {
         "artist_id": enemies[0]["artist_id"],
@@ -433,6 +485,8 @@ def next_round(sid: str):
     refresh_shop(state)
     state["phase"] = "shop"
     state["last_battle_log"] = None
+    state["last_battle_events"] = None
+    state["last_enemy_units_initial"] = None
     state["last_result"] = None
     state["last_enemy_artist"] = None
     return public_state(state)
@@ -441,6 +495,124 @@ def next_round(sid: str):
 @app.get("/game/{sid}")
 def get_state(sid: str):
     return public_state(get_session(sid))
+
+
+# ==================== Spotify 미리듣기 ====================
+_spotify_token_cache: dict = {"token": None, "expires_at": 0.0}
+_track_search_cache: dict[str, Optional[dict]] = {}
+
+
+def _read_token_cache_file() -> Optional[dict]:
+    """Spotipy 스타일 .cache 파일을 읽어 만료 안 된 토큰을 반환."""
+    for path in SPOTIFY_TOKEN_CACHE_PATHS:
+        if not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        token = data.get("access_token")
+        expires_at = float(data.get("expires_at", 0))
+        if token and expires_at > time.time() + 30:
+            return {"token": token, "expires_at": expires_at}
+    return None
+
+
+def _request_client_credentials_token() -> dict:
+    """.env 자격증명으로 Client Credentials 토큰 발급."""
+    if not SPOTIFY_CLIENT_ID or not SPOTIFY_CLIENT_SECRET:
+        raise HTTPException(500, detail={"error": "SPOTIFY_NOT_CONFIGURED"})
+    creds = b64encode(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}".encode()).decode()
+    req = urllib.request.Request(
+        "https://accounts.spotify.com/api/token",
+        data=b"grant_type=client_credentials",
+        headers={
+            "Authorization": f"Basic {creds}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read())
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode(errors="replace") if hasattr(exc, "read") else ""
+        raise HTTPException(502, detail={"error": "SPOTIFY_AUTH_FAILED", "msg": f"{exc.code}: {body[:200]}"})
+    except Exception as exc:
+        raise HTTPException(502, detail={"error": "SPOTIFY_AUTH_FAILED", "msg": str(exc)})
+    return {
+        "token": data["access_token"],
+        "expires_at": time.time() + int(data.get("expires_in", 3600)),
+    }
+
+
+def _get_spotify_token() -> str:
+    now = time.time()
+    # 1) 메모리 캐시
+    if _spotify_token_cache["token"] and _spotify_token_cache["expires_at"] > now + 30:
+        return _spotify_token_cache["token"]
+    # 2) 파일 캐시 (.cache)
+    cached = _read_token_cache_file()
+    if cached:
+        _spotify_token_cache.update(cached)
+        return cached["token"]
+    # 3) .env 자격증명으로 새로 발급
+    fresh = _request_client_credentials_token()
+    _spotify_token_cache.update(fresh)
+    return fresh["token"]
+
+
+def _spotify_search_first(query: str, token: str) -> Optional[dict]:
+    url = "https://api.spotify.com/v1/search?" + urllib.parse.urlencode(
+        {"q": query, "type": "track", "limit": 1}
+    )
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read())
+    except Exception:
+        return None
+    items = data.get("tracks", {}).get("items", [])
+    return items[0] if items else None
+
+
+def _spotify_track_info(artist: str, track: str) -> Optional[dict]:
+    key = f"{artist}|{track}".lower()
+    if key in _track_search_cache:
+        return _track_search_cache[key]
+
+    token = _get_spotify_token()
+    item = _spotify_search_first(f'artist:"{artist}" track:"{track}"', token)
+    if item is None:
+        item = _spotify_search_first(f"{artist} {track}", token)
+
+    if item is None:
+        result = None
+    else:
+        images = item.get("album", {}).get("images") or []
+        result = {
+            "name": item.get("name"),
+            "artist": ", ".join(a["name"] for a in item.get("artists", [])),
+            "preview_url": item.get("preview_url"),
+            "external_url": item.get("external_urls", {}).get("spotify"),
+            "uri": item.get("uri"),
+            "duration_ms": item.get("duration_ms"),
+            "image": images[0]["url"] if images else None,
+        }
+
+    _track_search_cache[key] = result
+    return result
+
+
+@app.get("/spotify/track")
+def spotify_track(artist: str, track: str):
+    """미리듣기 URL 등 Spotify 트랙 메타데이터 검색."""
+    if not artist or not track:
+        raise HTTPException(400, detail={"error": "MISSING_QUERY"})
+    info = _spotify_track_info(artist, track)
+    if not info:
+        return {"found": False}
+    return {"found": True, **info}
 
 
 @app.get("/api")
