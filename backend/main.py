@@ -56,13 +56,24 @@ def calc_atk(popularity: int) -> float:
     return round(BASE_ATK * (3 - 2 * popularity / 100), 1)
 
 
+def public_asset_url(value: Optional[str]) -> Optional[str]:
+    """data.json의 로컬 asset 상대 경로를 브라우저에서 접근 가능한 URL로 변환."""
+    if not value:
+        return None
+    if value.startswith(("http://", "https://", "/")):
+        return value
+    if value.startswith("assets/"):
+        return f"/{value}"
+    return value
+
+
 def make_track(track_data: dict, artist_id: str, idx: int) -> dict:
     """data.json의 트랙을 게임용 트랙 객체로 변환"""
     return {
         "track_id": f"{artist_id}_{idx}_{uuid.uuid4().hex[:4]}",
         "track_name": track_data["track_name"],
         "track_name_kr": track_data.get("track_name_kr"),
-        "cover_image": track_data.get("cover_image"),
+        "cover_image": public_asset_url(track_data.get("cover_image")),
         "popularity": track_data["popularity"],
         "atk": calc_atk(track_data["popularity"]),
     }
@@ -74,7 +85,7 @@ def make_unit_from_track(track: dict) -> dict:
         "unit_id": uuid.uuid4().hex[:8],
         "track_name": track["track_name"],
         "track_name_kr": track.get("track_name_kr"),
-        "cover_image": track.get("cover_image"),
+        "cover_image": public_asset_url(track.get("cover_image")),
         "popularity": track["popularity"],
         "hp": BASE_HP,
         "max_hp": BASE_HP,
@@ -131,7 +142,7 @@ def spawn_enemies(player_artist_id: str, round_no: int) -> list[dict]:
             "artist_name_kr": enemy_artist.get("artist_name_kr"),
             "track_name": track_data["track_name"],
             "track_name_kr": track_data.get("track_name_kr"),
-            "cover_image": track_data.get("cover_image"),
+            "cover_image": public_asset_url(track_data.get("cover_image")),
             "popularity": pop,
             "hp": max_hp,
             "max_hp": max_hp,
@@ -271,7 +282,7 @@ def new_game():
                 "artist_id": a["artist_id"],
                 "artist_name": a["artist_name"],
                 "artist_name_kr": a.get("artist_name_kr"),
-                "profile_image": a.get("profile_image"),
+                "profile_image": public_asset_url(a.get("profile_image")),
                 "genre": a.get("genre"),
                 "sample_popularity": [t["popularity"] for t in a["tracks"][:5]],
                 "avg_popularity": round(
@@ -295,7 +306,7 @@ def select_persona(sid: str, req: PersonaSelect):
     state["artist_id"] = req.artist_id
     state["artist_name"] = artist["artist_name"]
     state["artist_name_kr"] = artist.get("artist_name_kr")
-    state["profile_image"] = artist.get("profile_image")
+    state["profile_image"] = public_asset_url(artist.get("profile_image"))
     state["genre"] = artist.get("genre")
     state["round"] = 1
     state["phase"] = "shop"
