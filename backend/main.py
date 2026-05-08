@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 
-# ==================== .env 로더 (Secrets/.env) ====================
+# ==================== Secrets 로더 ====================
 def _load_env_file() -> None:
     env_path = Path(__file__).parent.parent / "Secrets" / ".env"
     if not env_path.exists():
@@ -34,7 +34,37 @@ def _load_env_file() -> None:
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
+def _load_spotify_json() -> None:
+    """Secrets/spotify.json의 자격증명을 환경변수로 로드한다."""
+    secrets_path = Path(__file__).parent.parent / "Secrets" / "spotify.json"
+    if not secrets_path.exists():
+        return
+    try:
+        data = json.loads(secrets_path.read_text(encoding="utf-8"))
+    except Exception:
+        return
+
+    client_id = (
+        data.get("SPOTIFY_CLIENT_ID")
+        or data.get("spotify_client_id")
+        or data.get("client_id")
+        or data.get("id")
+    )
+    client_secret = (
+        data.get("SPOTIFY_CLIENT_SECRET")
+        or data.get("spotify_client_secret")
+        or data.get("client_secret")
+        or data.get("secret")
+    )
+
+    if client_id:
+        os.environ.setdefault("SPOTIFY_CLIENT_ID", str(client_id))
+    if client_secret:
+        os.environ.setdefault("SPOTIFY_CLIENT_SECRET", str(client_secret))
+
+
 _load_env_file()
+_load_spotify_json()
 SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET")
 
@@ -613,6 +643,54 @@ def spotify_track(artist: str, track: str):
     if not info:
         return {"found": False}
     return {"found": True, **info}
+
+
+@app.get("/game/{sid}/persona-playlist")
+def persona_playlist(sid: str):
+    """선택한 페르소나 아티스트의 트랙 목록을 Spotify 미리듣기 플레이리스트로 변환."""
+    state = get_session(sid)
+    if not state.get("artist_id"):
+        raise HTTPException(400, detail={"error": "PERSONA_NOT_SELECTED"})
+
+    artist = ARTISTS_BY_ID[state["artist_id"]]
+    artist_name = artist["artist_name"]
+    playlist = []
+
+    try:
+        for track in artist["tracks"]:
+            info = _spotify_track_info(artist_name, track["track_name"])
+            playlist.append({
+                "track_name": track["track_name"],
+                "track_name_kr": track.get("track_name_kr"),
+                "cover_image": public_asset_url(track.get("cover_image")),
+                "popularity": track["popularity"],
+                "found": bool(info),
+                "name": info.get("name") if info else track["track_name"],
+                "artist": info.get("artist") if info else artist_name,
+                "preview_url": info.get("preview_url") if info else None,
+                "external_url": info.get("external_url") if info else None,
+                "uri": info.get("uri") if info else None,
+                "duration_ms": info.get("duration_ms") if info else None,
+                "image": info.get("image") if info else public_asset_url(track.get("cover_image")),
+            })
+    except HTTPException as exc:
+        if exc.detail.get("error") == "SPOTIFY_NOT_CONFIGURED":
+            return {
+                "configured": False,
+                "artist_id": artist["artist_id"],
+                "artist_name": artist_name,
+                "artist_name_kr": artist.get("artist_name_kr"),
+                "tracks": [],
+            }
+        raise
+
+    return {
+        "configured": True,
+        "artist_id": artist["artist_id"],
+        "artist_name": artist_name,
+        "artist_name_kr": artist.get("artist_name_kr"),
+        "tracks": playlist,
+    }
 
 
 @app.get("/api")

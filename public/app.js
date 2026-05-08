@@ -1,4 +1,7 @@
 const app = document.querySelector("#app");
+const combatOverlayRoot = document.createElement("div");
+combatOverlayRoot.id = "combatOverlayRoot";
+document.body.appendChild(combatOverlayRoot);
 
 const state = {
   sessionId: null,
@@ -12,8 +15,22 @@ const state = {
   combatAllyUnits: [],
   combatEnemyUnits: [],
   battleSpeed: 1,
+  music: {
+    playlist: [],
+    currentIndex: 0,
+    isPlaying: false,
+    loading: false,
+    error: "",
+    currentTime: 0,
+    duration: 0,
+    volume: 0.7,
+    configured: true
+  },
   toast: ""
 };
+
+const bgmAudio = new Audio();
+bgmAudio.volume = state.music.volume;
 
 const GAME_CONFIG = {
   unitCost: 3,
@@ -164,7 +181,37 @@ async function selectPersona(artistId) {
       body: JSON.stringify({ artist_id: artistId })
     });
     updateGame(game);
+    await loadPersonaMusic();
   });
+}
+
+async function loadPersonaMusic() {
+  state.music.loading = true;
+  state.music.error = "";
+  render();
+
+  try {
+    const data = await api(`/game/${state.sessionId}/persona-playlist`);
+    const playableTracks = (data.tracks ?? []).filter((track) => track.preview_url || spotifyEmbedUrl(track));
+    state.music.playlist = playableTracks;
+    state.music.currentIndex = 0;
+    state.music.configured = data.configured !== false;
+    state.music.loading = false;
+
+    if (!state.music.configured) {
+      state.music.error = "Spotify API 키를 확인하세요.";
+    } else if (playableTracks.length === 0) {
+      state.music.error = "Spotify에서 미리듣기 가능한 트랙을 찾지 못했습니다.";
+    } else {
+      loadCurrentMusicTrack();
+      await playMusic();
+    }
+  } catch (error) {
+    state.music.loading = false;
+    state.music.error = error.message || "배경음악을 불러오지 못했습니다.";
+  }
+
+  render();
 }
 
 async function buyTrack(trackId) {
@@ -216,24 +263,24 @@ async function startCombat() {
     return;
   }
 
-  state.phase = "combat";
   state.combatLogs = [];
   state.combatDone = false;
   state.combatAllyUnits = state.game.board.map((u) => ({ ...u }));
   state.combatEnemyUnits = [];
-  render();
+  renderCombatOverlay();
 
   try {
     const game = await api(`/game/${state.sessionId}/start_combat`, { method: "POST" });
     state.combatMatchup = { player: state.game, enemy: game.last_enemy_artist };
     state.combatEnemyUnits = (game.last_enemy_units_initial ?? []).map((u) => ({ ...u }));
-    render();
+    renderCombatOverlay();
 
     await playCombatEvents(game.last_battle_events ?? [], state.combatAllyUnits, state.combatEnemyUnits);
 
     state.combatDone = true;
-    render();
+    renderCombatOverlay();
     await sleep(combatDelay(900));
+    clearCombatOverlay();
     updateGame(game);
   } catch (error) {
     state.phase = "shop";
@@ -242,6 +289,7 @@ async function startCombat() {
     state.combatMatchup = null;
     state.combatAllyUnits = [];
     state.combatEnemyUnits = [];
+    clearCombatOverlay();
     showToast(error.message);
   }
 }
@@ -346,6 +394,110 @@ function updateHpBar(el, hp, maxHp) {
   if (text) text.textContent = `${Math.ceil(safeHp)}/${maxHp}`;
 }
 
+function getCurrentMusicTrack() {
+  return state.music.playlist[state.music.currentIndex] ?? null;
+}
+
+function spotifyEmbedUrl(track) {
+  const uriId = track?.uri?.startsWith("spotify:track:") ? track.uri.split(":").at(-1) : null;
+  const urlId = track?.external_url?.match(/\/track\/([^?]+)/)?.[1] ?? null;
+  const id = uriId || urlId;
+  return id ? `https://open.spotify.com/embed/track/${encodeURIComponent(id)}?utm_source=generator&theme=0` : "";
+}
+
+function loadCurrentMusicTrack() {
+  const track = getCurrentMusicTrack();
+  if (!track?.preview_url) {
+    return;
+  }
+
+  if (bgmAudio.src !== track.preview_url) {
+    bgmAudio.src = track.preview_url;
+    bgmAudio.currentTime = 0;
+  }
+}
+
+async function playMusic() {
+  const track = getCurrentMusicTrack();
+  if (!track?.preview_url) {
+    state.music.error = spotifyEmbedUrl(track)
+      ? "이 곡은 Spotify 내장 플레이어에서 재생 버튼을 눌러 미리듣기하세요."
+      : "재생 가능한 트랙이 없습니다.";
+    render();
+    return;
+  }
+
+  loadCurrentMusicTrack();
+  try {
+    await bgmAudio.play();
+    state.music.isPlaying = true;
+    state.music.error = "";
+  } catch (_) {
+    state.music.isPlaying = false;
+    state.music.error = "브라우저가 자동 재생을 막았습니다. 재생 버튼을 눌러주세요.";
+  }
+  render();
+}
+
+function pauseMusic() {
+  bgmAudio.pause();
+  state.music.isPlaying = false;
+  render();
+}
+
+function toggleMusic() {
+  if (state.music.isPlaying) {
+    pauseMusic();
+  } else {
+    playMusic();
+  }
+}
+
+function changeMusicTrack(delta) {
+  if (state.music.playlist.length === 0) {
+    return;
+  }
+
+  state.music.currentIndex =
+    (state.music.currentIndex + delta + state.music.playlist.length) % state.music.playlist.length;
+  loadCurrentMusicTrack();
+  if (state.music.isPlaying) {
+    playMusic();
+  } else {
+    state.music.error = "";
+    render();
+  }
+}
+
+function seekMusic(percent) {
+  if (!Number.isFinite(bgmAudio.duration) || bgmAudio.duration <= 0) {
+    return;
+  }
+  bgmAudio.currentTime = (percent / 100) * bgmAudio.duration;
+}
+
+function setMusicVolume(value) {
+  state.music.volume = Math.max(0, Math.min(1, Number(value) / 100));
+  bgmAudio.volume = state.music.volume;
+  render();
+}
+
+function resetMusic() {
+  bgmAudio.pause();
+  bgmAudio.removeAttribute("src");
+  state.music = {
+    playlist: [],
+    currentIndex: 0,
+    isPlaying: false,
+    loading: false,
+    error: "",
+    currentTime: 0,
+    duration: 0,
+    volume: state.music.volume,
+    configured: true
+  };
+}
+
 async function nextRound() {
   await perform(async () => {
     const game = await api(`/game/${state.sessionId}/next_round`, { method: "POST" });
@@ -365,6 +517,8 @@ async function restartGame() {
   state.combatMatchup = null;
   state.combatAllyUnits = [];
   state.combatEnemyUnits = [];
+  resetMusic();
+  clearCombatOverlay();
   await boot();
 }
 
@@ -377,6 +531,7 @@ async function perform(action) {
 }
 
 function updateGame(game) {
+  clearCombatOverlay();
   state.game = game;
   state.phase = normalizePhase(game.phase);
   state.combatLogs = [];
@@ -484,7 +639,9 @@ function renderGameScreen() {
               ${renderBattleSpeedControl("battleSpeed")}
             </div>
           </section>
-          <section class="panel">${renderUnitDetail(selectedUnit)}</section>
+          <section class="panel music-panel">
+            ${renderMusicPlayer()}
+          </section>
         </aside>
       </div>
       ${renderToast()}
@@ -581,7 +738,7 @@ function renderUnitDetail(unit) {
     return `
       <p class="eyebrow">Unit Detail</p>
       <h3>기물을 선택하세요</h3>
-      <p class="muted">보드 위 앨범 커버를 클릭하면 백엔드가 계산한 인기도와 공격력을 확인할 수 있습니다.</p>
+      <p class="muted">보드 위 앨범 커버를 클릭하세요.</p>
     `;
   }
 
@@ -591,15 +748,90 @@ function renderUnitDetail(unit) {
     <p class="eyebrow">Unit Detail</p>
     ${imageTag(trackImage(unit), `${name} album cover`, "detail-cover")}
     <h3>${escapeHtml(name)}</h3>
-    <p class="muted">${escapeHtml(unit.track_name)} · Unit ID ${escapeHtml(unit.unit_id)}</p>
+    <p class="muted">${escapeHtml(unit.track_name)}</p>
     <div class="stat-row">
       <span class="pill">HP ${Math.max(0, Math.ceil(unit.hp))}/${unit.max_hp}</span>
       <span class="pill">Popularity ${unit.popularity}</span>
       <span class="pill strong">ATK ${formatAtk(unit.atk)}</span>
     </div>
-    <p class="muted" style="margin-top: 14px;">
-      ${unit.popularity <= 20 ? "무명 곡의 반격이 강력합니다." : "유명한 곡일수록 이 게임에서는 힘이 줄어듭니다."}
-    </p>
+  `;
+}
+
+function renderMusicPlayer() {
+  const track = getCurrentMusicTrack();
+  const embedUrl = spotifyEmbedUrl(track);
+  const usesEmbed = !track?.preview_url && embedUrl;
+  const progress =
+    state.music.duration > 0 ? Math.min(100, (state.music.currentTime / state.music.duration) * 100) : 0;
+
+  if (state.music.loading) {
+    return `
+      <div class="music-player">
+        <p class="eyebrow">Persona Radio</p>
+        <h3>플레이리스트를 불러오는 중...</h3>
+        <p class="muted">선택한 페르소나의 곡을 Spotify에서 찾고 있습니다.</p>
+      </div>
+    `;
+  }
+
+  if (!track) {
+    return `
+      <div class="music-player">
+        <p class="eyebrow">Persona Radio</p>
+        <h3>배경음악 대기 중</h3>
+        <p class="muted">${escapeHtml(state.music.error || "페르소나 선택 후 음악이 준비됩니다.")}</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="music-player ${usesEmbed ? "embed-mode" : ""}">
+      <div class="music-now">
+        ${imageTag(track.image || track.cover_image, `${track.name} album cover`, "music-cover")}
+        <div>
+          <p class="eyebrow">Persona Radio</p>
+          <h3>${escapeHtml(track.name || displayTrackName(track))}</h3>
+          <p class="muted">${escapeHtml(track.artist || state.game?.artist_name || "")}</p>
+        </div>
+      </div>
+      ${
+        usesEmbed
+          ? `<iframe class="spotify-embed" src="${escapeHtml(embedUrl)}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`
+          : `
+            <div class="music-progress" data-music-seek>
+              <div class="music-progress-fill" style="width: ${progress}%"></div>
+            </div>
+          `
+      }
+      ${
+        usesEmbed
+          ? `
+            <div class="music-controls embed-controls">
+              <button class="button secondary compact" id="musicPrev" type="button">이전 곡</button>
+              <a class="button compact" href="${escapeHtml(track.external_url ?? "#")}" target="_blank" rel="noopener">Spotify 열기</a>
+              <button class="button secondary compact" id="musicNext" type="button">다음 곡</button>
+            </div>
+          `
+          : `
+            <div class="music-controls">
+              <button class="button secondary compact" id="musicPrev" type="button">이전</button>
+              <button class="button compact" id="musicToggle" type="button">${state.music.isPlaying ? "일시정지" : "재생"}</button>
+              <button class="button secondary compact" id="musicNext" type="button">다음</button>
+            </div>
+          `
+      }
+      ${
+        usesEmbed
+          ? `<p class="music-error">Spotify 플레이어 안의 재생 버튼을 눌러 미리듣기하세요.</p>`
+          : `
+            <label class="music-volume">
+              <span>Volume</span>
+              <input id="musicVolume" type="range" min="0" max="100" value="${Math.round(state.music.volume * 100)}" />
+            </label>
+            ${state.music.error ? `<p class="music-error">${escapeHtml(state.music.error)}</p>` : ""}
+          `
+      }
+    </div>
   `;
 }
 
@@ -617,26 +849,26 @@ function renderBattleLog() {
 }
 
 function renderCombatOverlay() {
-  app.innerHTML = `
-    <main class="game-screen">
-      ${renderHud()}
-      <div class="overlay">
-        <div class="result-card combat-card">
-          <p class="eyebrow">Combat</p>
-          <h2>${state.combatDone ? "전투 종료" : "라이브 배틀 진행 중"}</h2>
-          <p class="muted">
-            ${state.combatDone ? "결과를 정산하는 중입니다." : "상대 아티스트의 곡과 턴마다 공격을 주고받습니다."}
-          </p>
-          ${renderCombatMatchup()}
-          ${renderCombatArena()}
-          ${renderBattleSpeedControl("combatSpeed")}
-        </div>
+  combatOverlayRoot.innerHTML = `
+    <div class="overlay combat-overlay">
+      <div class="result-card combat-card">
+        <p class="eyebrow">Combat</p>
+        <h2>${state.combatDone ? "전투 종료" : "라이브 배틀 진행 중"}</h2>
+        <p class="muted">
+          ${state.combatDone ? "결과를 정산하는 중입니다." : "상대 아티스트의 곡과 턴마다 공격을 주고받습니다."}
+        </p>
+        ${renderCombatMatchup()}
+        ${renderCombatArena()}
+        ${renderBattleSpeedControl("combatSpeed")}
       </div>
-      ${renderToast()}
-    </main>
+    </div>
   `;
 
   bindBattleSpeedControl("#combatSpeed");
+}
+
+function clearCombatOverlay() {
+  combatOverlayRoot.innerHTML = "";
 }
 
 function renderCombatArena() {
@@ -787,6 +1019,18 @@ function bindGameEvents() {
   document.querySelector("#buyExp").addEventListener("click", buyExp);
   document.querySelector("#sellUnit").addEventListener("click", sellSelectedUnit);
   bindBattleSpeedControl("#battleSpeed");
+  bindMusicControls();
+}
+
+function bindMusicControls() {
+  document.querySelector("#musicPrev")?.addEventListener("click", () => changeMusicTrack(-1));
+  document.querySelector("#musicToggle")?.addEventListener("click", toggleMusic);
+  document.querySelector("#musicNext")?.addEventListener("click", () => changeMusicTrack(1));
+  document.querySelector("#musicVolume")?.addEventListener("input", (event) => setMusicVolume(event.target.value));
+  document.querySelector("[data-music-seek]")?.addEventListener("click", (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    seekMusic(((event.clientX - rect.left) / rect.width) * 100);
+  });
 }
 
 function renderBattleSpeedControl(id) {
@@ -859,6 +1103,33 @@ function render() {
     renderEndScreen("clear");
   }
 }
+
+bgmAudio.addEventListener("timeupdate", () => {
+  state.music.currentTime = bgmAudio.currentTime || 0;
+  state.music.duration = Number.isFinite(bgmAudio.duration) ? bgmAudio.duration : 0;
+  const fill = document.querySelector(".music-progress-fill");
+  if (fill && state.music.duration > 0) {
+    fill.style.width = `${Math.min(100, (state.music.currentTime / state.music.duration) * 100)}%`;
+  }
+});
+
+bgmAudio.addEventListener("loadedmetadata", () => {
+  state.music.duration = Number.isFinite(bgmAudio.duration) ? bgmAudio.duration : 0;
+  render();
+});
+
+bgmAudio.addEventListener("ended", () => {
+  changeMusicTrack(1);
+  playMusic();
+});
+
+bgmAudio.addEventListener("pause", () => {
+  state.music.isPlaying = false;
+});
+
+bgmAudio.addEventListener("play", () => {
+  state.music.isPlaying = true;
+});
 
 function selectUnit(unitId) {
   state.selectedUnitId = unitId;
