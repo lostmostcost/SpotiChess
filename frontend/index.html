@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spotify Chess — 무명이 강해지는 오토배틀러</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              spotify: {
+                bg: "#121212",
+                card: "#181818",
+                cardHover: "#222",
+                border: "#2a2a2a",
+                text: "#e5e5e5",
+                muted: "#9a9a9a",
+                green: "#1DB954",
+                greenSoft: "rgba(29,185,84,0.15)",
+                pink: "#ff4d8d",
+                amber: "#f5b73b",
+              },
+            },
+            fontFamily: {
+              display: ['"SF Pro Display"', "system-ui", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background: radial-gradient(circle at 20% -10%, #1f1f1f 0%, #0d0d0d 60%);
+      }
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 3px;
+      }
+      .pulse-green {
+        box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.7);
+        animation: pulse-green 1.4s infinite;
+      }
+      @keyframes pulse-green {
+        70% {
+          box-shadow: 0 0 0 12px rgba(29, 185, 84, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(29, 185, 84, 0);
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-spotify-text font-display">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      <header class="mb-8">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-full bg-spotify-green flex items-center justify-center text-black text-xl font-black"
+          >
+            ♟
+          </div>
+          <div>
+            <h1 class="text-3xl font-black tracking-tight">Spotify Chess</h1>
+            <p class="text-spotify-muted text-sm">
+              "유명할수록 약해진다" — Spotify 메타데이터 기반 민주적 역밸런싱 오토배틀러
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <!-- 메타 페널티 데모 패널 -->
+      <section
+        id="meta-panel"
+        class="mb-8 border border-spotify-border rounded-xl p-5 bg-spotify-card"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-lg font-bold">메타 페널티 시각화</h2>
+            <p class="text-xs text-spotify-muted">
+              동일 트랙이라도 픽률이 오르면 power가 줄어듭니다 (1 − pick_rate/100).
+            </p>
+          </div>
+          <button
+            id="meta-demo-btn"
+            class="bg-spotify-green text-black font-semibold px-4 py-2 rounded-full text-sm hover:scale-[1.03] transition"
+          >
+            BTS로 데모 실행
+          </button>
+        </div>
+        <div id="meta-result" class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+          <div class="text-spotify-muted">아직 실행 전 — 우측 버튼을 눌러보세요.</div>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 상점 -->
+        <section
+          class="border border-spotify-border rounded-xl bg-spotify-card flex flex-col"
+        >
+          <div class="flex items-center justify-between p-5 border-b border-spotify-border">
+            <div>
+              <h2 class="text-lg font-bold">상점 (Shop)</h2>
+              <p class="text-xs text-spotify-muted">
+                Roll 후 카드의 <span class="text-spotify-green">→ A</span> /
+                <span class="text-spotify-pink">→ B</span> 버튼으로 팀에 추가
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                id="shop-count"
+                type="number"
+                value="5"
+                min="1"
+                max="10"
+                class="w-16 bg-black border border-spotify-border rounded-md px-2 py-1 text-sm"
+              />
+              <button
+                id="roll-btn"
+                class="bg-spotify-green text-black font-semibold px-4 py-1.5 rounded-full text-sm hover:scale-[1.03] transition"
+              >
+                Roll
+              </button>
+            </div>
+          </div>
+          <div
+            id="shop-grid"
+            class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[520px] overflow-y-auto scrollbar-thin"
+          >
+            <div class="col-span-full text-center text-spotify-muted py-12">
+              Roll 버튼을 눌러 상점을 굴려보세요.
+            </div>
+          </div>
+        </section>
+
+        <!-- 배틀 -->
+        <section
+          class="border border-spotify-border rounded-xl bg-spotify-card flex flex-col"
+        >
+          <div class="flex items-center justify-between p-5 border-b border-spotify-border">
+            <div>
+              <h2 class="text-lg font-bold">배틀 (Battle)</h2>
+              <p class="text-xs text-spotify-muted">
+                두 팀의 power 합산을 비교합니다.
+              </p>
+            </div>
+            <button
+              id="simulate-btn"
+              class="bg-spotify-green text-black font-semibold px-4 py-1.5 rounded-full text-sm hover:scale-[1.03] transition disabled:opacity-30 disabled:cursor-not-allowed"
+              disabled
+            >
+              Simulate
+            </button>
+          </div>
+          <div class="grid grid-cols-2 divide-x divide-spotify-border">
+            <div class="p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold text-spotify-green">Team A</h3>
+                <span id="team-a-score" class="text-xs text-spotify-muted">0.0</span>
+              </div>
+              <div
+                id="team-a"
+                class="space-y-2 min-h-[200px] max-h-[400px] overflow-y-auto scrollbar-thin"
+              >
+                <div class="text-xs text-spotify-muted">비어 있음</div>
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold text-spotify-pink">Team B</h3>
+                <span id="team-b-score" class="text-xs text-spotify-muted">0.0</span>
+              </div>
+              <div
+                id="team-b"
+                class="space-y-2 min-h-[200px] max-h-[400px] overflow-y-auto scrollbar-thin"
+              >
+                <div class="text-xs text-spotify-muted">비어 있음</div>
+              </div>
+            </div>
+          </div>
+          <div
+            id="battle-result"
+            class="border-t border-spotify-border p-5 text-sm hidden"
+          ></div>
+        </section>
+      </div>
+
+      <footer class="mt-10 text-xs text-spotify-muted text-center">
+        해커톤 MVP · API 문서 →
+        <a href="/docs" class="underline hover:text-spotify-green">/docs</a>
+      </footer>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
