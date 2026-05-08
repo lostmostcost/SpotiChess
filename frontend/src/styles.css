@@ -1,0 +1,215 @@
+:root {
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: #f2efe7;
+  background: radial-gradient(circle at top, #343f63 0%, #1f2742 35%, #131a2e 100%);
+}
+
+.gameRoot {
+  max-width: 1080px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.hudBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  background: #273356;
+  border: 3px solid #0d1530;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.scene {
+  background: linear-gradient(180deg, #314372 0%, #25345c 100%);
+  border: 4px solid #0f1b3c;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 2px #4965ab;
+  padding: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: 58px;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0 #102248;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: #d6dbeb;
+}
+
+.sceneTitle {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.sceneDesc {
+  margin-top: 0;
+  color: #d6dbeb;
+}
+
+.sceneHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.actionRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.btnMain,
+.btnGhost {
+  border: 2px solid #0d1530;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btnMain {
+  background: linear-gradient(180deg, #f0bd54 0%, #df8f31 100%);
+  color: #261707;
+}
+
+.btnGhost {
+  background: linear-gradient(180deg, #758ac3 0%, #4f6295 100%);
+  color: #f1f4ff;
+}
+
+.btnMain:disabled,
+.btnGhost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.personaGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.personaCard {
+  border: 3px solid #192a54;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #6f84bc 0%, #475e9b 100%);
+  color: #f9fbff;
+  text-align: left;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.personaCard.active {
+  border-color: #ffd166;
+  transform: translateY(-1px);
+}
+
+.shopToolbar {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.shopToolbar input[type="range"] {
+  display: block;
+  width: 260px;
+}
+
+.unitGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.unitCard {
+  border: 3px solid #192a54;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #4d6296 0%, #34497a 100%);
+  color: #f7f8fe;
+  text-align: left;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.unitCard.selected {
+  border-color: #ffd166;
+}
+
+.statPanel,
+.resultPanel,
+.teamPanel {
+  margin-top: 12px;
+  border: 3px solid #15254d;
+  border-radius: 12px;
+  background: #21335c;
+  padding: 12px;
+}
+
+.stats {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stats span {
+  background: #182748;
+  border: 2px solid #3d5b9c;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.powerValue {
+  border-color: #ffd166 !important;
+}
+
+.battleBoard {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 10px;
+}
+
+.versus {
+  align-self: center;
+  font-size: 30px;
+  font-weight: 800;
+  color: #ffd166;
+  text-shadow: 2px 2px 0 #13264e;
+}
+
+.errorBanner {
+  margin: 0;
+  background: #5c1f2a;
+  border: 2px solid #a04759;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
