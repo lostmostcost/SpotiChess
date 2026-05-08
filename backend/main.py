@@ -43,6 +43,7 @@ MAX_BATTLE_TURNS = 30
 # ==================== 데이터 로드 ====================
 DATA_PATH = Path(__file__).parent / "data.json"
 PUBLIC_PATH = Path(__file__).parent.parent / "public"
+ASSETS_PATH = Path(__file__).parent / "assets"
 with open(DATA_PATH, encoding="utf-8") as f:
     GAME_DATA = json.load(f)
 
@@ -444,4 +445,5 @@ def frontend_root():
     return FileResponse(PUBLIC_PATH / "index.html")
 
 
+app.mount("/assets", StaticFiles(directory=ASSETS_PATH), name="assets")
 app.mount("/", StaticFiles(directory=PUBLIC_PATH, html=True), name="frontend")
