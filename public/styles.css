@@ -18,13 +18,14 @@
 }
 
 html {
-  min-height: 100%;
+  height: 100%;
   background: var(--color-bg);
 }
 
 body {
-  min-height: 100vh;
+  height: 100vh;
   margin: 0;
+  overflow: hidden;
   color: var(--color-text);
   background:
     radial-gradient(circle at 10% 10%, rgba(29, 185, 84, 0.2), transparent 28rem),
@@ -53,7 +54,8 @@ button:focus-visible,
 }
 
 #app {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .loading-screen,
@@ -194,31 +196,63 @@ h3 {
   background: var(--color-primary-hover);
 }
 
+.speed-control {
+  display: grid;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.speed-control span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.speed-control strong {
+  color: var(--color-primary-hover);
+  white-space: nowrap;
+}
+
+.speed-control input {
+  width: 100%;
+  accent-color: var(--color-primary-hover);
+  cursor: pointer;
+}
+
 .game-screen {
   display: grid;
-  gap: 18px;
-  min-height: 100vh;
-  padding: 20px;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  height: 100vh;
+  overflow: hidden;
+  padding: clamp(10px, 1.25vw, 16px);
 }
 
 .hud {
   display: grid;
-  grid-template-columns: 1.4fr repeat(5, minmax(110px, 1fr));
-  gap: 12px;
+  grid-template-columns: 1.35fr repeat(5, minmax(92px, 1fr));
+  gap: 8px;
   align-items: stretch;
 }
 
 .hud-card {
-  min-height: 74px;
-  padding: 14px;
+  min-height: 58px;
+  padding: 10px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 18px;
+  border-radius: 14px;
   background: rgba(24, 24, 24, 0.8);
 }
 
 .hud-card span {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   color: var(--color-text-muted);
   font-size: 0.75rem;
   font-weight: 800;
@@ -227,7 +261,7 @@ h3 {
 }
 
 .hud-card strong {
-  font-size: 1.35rem;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
 }
 
 .artist-chip {
@@ -237,37 +271,70 @@ h3 {
 }
 
 .artist-chip img {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   object-fit: cover;
 }
 
 .main-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .board-section,
 .side-stack {
   display: grid;
-  gap: 18px;
+  gap: 12px;
+  min-height: 0;
   align-content: start;
 }
 
+.board-section {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.side-stack {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
 .panel {
-  padding: 18px;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px;
   background: rgba(18, 18, 18, 0.78);
   backdrop-filter: blur(18px);
+}
+
+.board-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.shop-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, auto);
 }
 
 .panel-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.panel-heading h2,
+.panel-heading h3 {
+  margin-bottom: 4px;
+}
+
+.panel-heading .muted {
+  margin-bottom: 0;
+  font-size: 0.84rem;
 }
 
 .muted {
@@ -277,33 +344,38 @@ h3 {
 .board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
 }
 
 .board-slot {
-  min-height: 236px;
+  min-height: 0;
   border: 1px dashed rgba(255, 255, 255, 0.18);
-  border-radius: 20px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.035);
 }
 
 .empty-slot {
   display: grid;
   height: 100%;
-  min-height: 236px;
+  min-height: 0;
   place-items: center;
-  padding: 18px;
+  padding: 10px;
   color: var(--color-text-muted);
+  font-size: 0.9rem;
   text-align: center;
 }
 
 .unit-card {
   position: relative;
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   height: 100%;
-  min-height: 236px;
-  gap: 12px;
-  padding: 12px;
+  min-height: 0;
+  gap: 8px;
+  padding: 9px;
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -328,6 +400,8 @@ h3 {
 }
 
 .unit-cover {
+  height: 100%;
+  min-height: 0;
   border-radius: 14px;
 }
 
@@ -342,27 +416,36 @@ h3 {
 .card-subtitle {
   margin-bottom: 0;
   color: var(--color-text-muted);
-  font-size: 0.86rem;
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .stat-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 5px;
+  margin-top: 6px;
 }
 
 .shop-grid {
   display: grid;
-  gap: 12px;
+  gap: 8px;
+  min-height: 0;
+}
+
+.shop-panel .shop-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .track-card {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 9px;
   width: 100%;
-  padding: 10px;
+  min-height: 70px;
+  padding: 8px;
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -370,6 +453,12 @@ h3 {
     transform 180ms ease,
     border-color 180ms ease,
     background 180ms ease;
+}
+
+.shop-panel .track-card {
+  grid-template-columns: 48px minmax(0, 1fr);
+  min-height: 64px;
+  padding: 7px;
 }
 
 .track-card:hover:not(:disabled) {
@@ -389,15 +478,20 @@ h3 {
 
 .actions {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+}
+
+.side-stack .panel:last-child {
+  display: grid;
+  align-content: start;
 }
 
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 46px;
-  padding: 12px 16px;
+  min-height: 38px;
+  padding: 9px 14px;
   border-radius: 999px;
   color: #06130b;
   background: var(--color-primary);
@@ -431,8 +525,9 @@ h3 {
 }
 
 .detail-cover {
-  width: 100%;
-  margin-bottom: 14px;
+  width: min(100%, 150px);
+  max-height: 150px;
+  margin: 0 auto 10px;
   aspect-ratio: 1;
   border-radius: 18px;
   object-fit: cover;
@@ -440,18 +535,19 @@ h3 {
 
 .log-list {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .log-list li {
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid var(--color-border);
   border-radius: 14px;
   color: var(--color-text-muted);
   background: rgba(255, 255, 255, 0.04);
+  font-size: 0.9rem;
 }
 
 .overlay {
@@ -475,6 +571,11 @@ h3 {
 .combat-card {
   width: min(760px, 100%);
   text-align: left;
+}
+
+.combat-card .speed-control {
+  width: min(460px, 100%);
+  margin: 14px auto 0;
 }
 
 .combat-card h2,

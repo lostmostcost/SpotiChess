@@ -8,6 +8,7 @@ const state = {
   phase: "loading",
   combatLogs: [],
   combatDone: false,
+  battleSpeed: 1,
   toast: ""
 };
 
@@ -94,6 +95,16 @@ function sleep(ms) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
   });
+}
+
+function combatDelay(baseMs) {
+  return Math.round(baseMs / state.battleSpeed);
+}
+
+function battleSpeedLabel() {
+  if (state.battleSpeed <= 0.75) return "느림";
+  if (state.battleSpeed >= 1.5) return "빠름";
+  return "보통";
 }
 
 async function api(path, options = {}) {
@@ -212,7 +223,7 @@ async function startCombat() {
     await playCombatLogs(game.last_battle_log ?? []);
     state.combatDone = true;
     render();
-    await sleep(1100);
+    await sleep(combatDelay(1100));
     updateGame(game);
   } catch (error) {
     state.phase = "shop";
@@ -224,12 +235,12 @@ async function startCombat() {
 
 async function playCombatLogs(logs) {
   const dramaticLogs = logs.length > 0 ? logs : ["전투 로그가 비어 있습니다."];
-  await sleep(800);
+  await sleep(combatDelay(800));
 
   for (const log of dramaticLogs) {
     state.combatLogs = [...state.combatLogs, log].slice(-9);
     render();
-    await sleep(log.includes("승리") || log.includes("패배") ? 1300 : 850);
+    await sleep(log.includes("승리") || log.includes("패배") ? combatDelay(1300) : combatDelay(850));
   }
 }
 
@@ -328,7 +339,7 @@ function renderGameScreen() {
       ${renderHud()}
       <div class="main-layout">
         <section class="board-section">
-          <div class="panel">
+          <div class="panel board-panel">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Board</p>
@@ -339,18 +350,7 @@ function renderGameScreen() {
             </div>
             <div class="board">${renderBoardSlots()}</div>
           </div>
-          <div class="panel">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Battle Log</p>
-                <h3>최근 전투 기록</h3>
-              </div>
-            </div>
-            ${renderBattleLog()}
-          </div>
-        </section>
-        <aside class="side-stack">
-          <section class="panel">
+          <section class="panel shop-panel">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Shop</p>
@@ -360,6 +360,8 @@ function renderGameScreen() {
             </div>
             <div class="shop-grid">${state.game.shop.map(renderTrackCard).join("")}</div>
           </section>
+        </section>
+        <aside class="side-stack">
           <section class="panel">
             <div class="panel-heading">
               <div>
@@ -372,6 +374,7 @@ function renderGameScreen() {
               <button class="button secondary" id="rerollShop">상점 리롤 - 1 Gold</button>
               <button class="button secondary" id="buyExp">EXP 구매 - 4 Gold</button>
               <button class="button danger" id="sellUnit" ${selectedUnit ? "" : "disabled"}>선택 기물 판매</button>
+              ${renderBattleSpeedControl("battleSpeed")}
             </div>
           </section>
           <section class="panel">${renderUnitDetail(selectedUnit)}</section>
@@ -517,6 +520,7 @@ function renderCombatOverlay() {
           <p class="muted">
             ${state.combatDone ? "결과를 정산하는 중입니다." : "상대 아티스트의 곡과 턴마다 공격을 주고받습니다."}
           </p>
+          ${renderBattleSpeedControl("combatSpeed")}
           <div class="combat-pulse" aria-hidden="true">
             <span></span>
             <span></span>
@@ -530,6 +534,8 @@ function renderCombatOverlay() {
       ${renderToast()}
     </main>
   `;
+
+  bindBattleSpeedControl("#combatSpeed");
 }
 
 function renderResolution() {
@@ -597,6 +603,39 @@ function bindGameEvents() {
   document.querySelector("#rerollShop").addEventListener("click", rerollShop);
   document.querySelector("#buyExp").addEventListener("click", buyExp);
   document.querySelector("#sellUnit").addEventListener("click", sellSelectedUnit);
+  bindBattleSpeedControl("#battleSpeed");
+}
+
+function renderBattleSpeedControl(id) {
+  return `
+    <label class="speed-control" for="${id}">
+      <span>전투 속도 <strong data-speed-label>${battleSpeedLabel()} · ${state.battleSpeed.toFixed(2)}x</strong></span>
+      <input
+        id="${id}"
+        type="range"
+        min="0.5"
+        max="2"
+        step="0.25"
+        value="${state.battleSpeed}"
+        aria-label="전투 로그 출력 속도"
+      />
+    </label>
+  `;
+}
+
+function bindBattleSpeedControl(selector) {
+  const input = document.querySelector(selector);
+
+  if (!input) {
+    return;
+  }
+
+  input.addEventListener("input", () => {
+    state.battleSpeed = Number(input.value);
+    document.querySelectorAll("[data-speed-label]").forEach((label) => {
+      label.textContent = `${battleSpeedLabel()} · ${state.battleSpeed.toFixed(2)}x`;
+    });
+  });
 }
 
 function renderToast() {
